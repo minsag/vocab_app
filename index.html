@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VocabQuest</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1a1410;
+  --paper: #f5f0e8;
+  --accent: #e85d2f;
+  --accent2: #2f7de8;
+  --accent3: #27a05a;
+  --muted: #8a8070;
+  --card: #fffdf8;
+  --border: #d4c9b0;
+  --correct: #27a05a;
+  --wrong: #e83030;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  padding: 20px 40px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 2px solid var(--border);
+  background: var(--card);
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { font-weight: 800; font-size: 24px; letter-spacing: -1px; }
+.logo span { color: var(--accent); }
+.badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  background: var(--ink); color: var(--paper);
+  padding: 4px 10px; border-radius: 20px; letter-spacing: 1px;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; }
+.screen.active { display: block; }
+.hidden { display: none !important; }
+
+/* ── SHARED BUTTONS ── */
+.btn {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700; font-size: 14px;
+  padding: 12px 24px; border-radius: 8px;
+  border: 2px solid var(--ink); cursor: pointer; transition: all 0.15s;
+}
+.btn-primary { background: var(--ink); color: var(--paper); box-shadow: 3px 3px 0 var(--accent); }
+.btn-primary:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--accent); }
+.btn-primary:disabled { opacity: 0.5; transform: none; cursor: default; }
+.btn-outline { background: transparent; color: var(--ink); box-shadow: 3px 3px 0 var(--border); }
+.btn-outline:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--border); }
+.btn-sm {
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 600;
+  padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 6px;
+  cursor: pointer; background: var(--card); transition: all 0.15s;
+}
+.btn-sm:hover { border-color: var(--ink); }
+.btn-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ── IMPORT SCREEN ── */
+#importScreen { max-width: 820px; margin: 40px auto; padding: 0 24px; }
+.import-hero { text-align: center; margin-bottom: 32px; }
+.import-hero h1 { font-size: 40px; font-weight: 800; letter-spacing: -2px; line-height: 1.1; }
+.import-hero p  { color: var(--muted); margin-top: 8px; font-size: 15px; }
+.import-box {
+  background: var(--card); border: 2px solid var(--border);
+  border-radius: 16px; padding: 28px;
+  box-shadow: 4px 4px 0 var(--border);
+}
+.import-box h2 {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 14px;
+}
+
+/* Loading state */
+.loading-bar {
+  height: 4px; background: var(--border); border-radius: 2px;
+  overflow: hidden; margin: 16px 0;
+}
+.loading-fill {
+  height: 100%; width: 0%; background: var(--accent);
+  border-radius: 2px; transition: width 0.4s;
+  animation: loading-pulse 1.2s ease infinite;
+}
+@keyframes loading-pulse {
+  0%,100% { opacity: 1; } 50% { opacity: 0.5; }
+}
+.csv-status {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  color: var(--muted); margin-bottom: 6px;
+}
+.csv-loaded {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px;
+  background: rgba(39,160,90,0.08);
+  border: 1.5px solid var(--correct);
+  border-radius: 10px; margin-bottom: 16px;
+}
+.csv-loaded .icon { font-size: 22px; }
+.csv-loaded .info strong { font-size: 15px; font-weight: 700; display: block; margin-bottom: 2px; }
+.csv-loaded .info span { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+.csv-error {
+  padding: 14px 18px;
+  background: rgba(232,48,48,0.08);
+  border: 1.5px solid var(--wrong);
+  border-radius: 10px; margin-bottom: 16px;
+  font-size: 13px; color: var(--wrong);
+}
+
+/* Format hint */
+.format-hint {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  background: var(--ink); color: #a8e6c1;
+  padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; line-height: 1.9;
+}
+
+/* ── MODE SCREEN ── */
+#modeScreen { max-width: 820px; margin: 32px auto; padding: 0 24px; }
+.mode-header h1 { font-size: 28px; font-weight: 800; letter-spacing: -1px; margin-bottom: 6px; }
+.mode-header p  { color: var(--muted); font-size: 14px; }
+.mode-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+  gap: 14px; margin: 20px 0;
+}
+.mode-card {
+  background: var(--card); border: 2px solid var(--border);
+  border-radius: 14px; padding: 22px 18px;
+  cursor: pointer; transition: all 0.18s;
+  box-shadow: 3px 3px 0 var(--border); position: relative;
+}
+.mode-card:hover { transform: translate(-3px,-3px); box-shadow: 6px 6px 0 var(--accent); border-color: var(--accent); }
+.mode-card .icon { font-size: 28px; margin-bottom: 10px; }
+.mode-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 5px; }
+.mode-card p  { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.diff {
+  position: absolute; top: 10px; right: 10px;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  padding: 2px 7px; border-radius: 8px; letter-spacing: 1px;
+}
+.diff-easy   { background: #d4edda; color: #155724; }
+.diff-medium { background: #fff3cd; color: #856404; }
+.diff-hard   { background: #f8d7da; color: #721c24; }
+.word-preview { background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: 16px 20px; }
+.word-preview h3 { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.word-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.word-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 10px; background: var(--paper); border: 1.5px solid var(--border); border-radius: 20px; }
+
+/* ── PROGRESS ── */
+.progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 28px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s; }
+
+/* ── GAME SCREEN ── */
+#gameScreen { max-width: 700px; margin: 32px auto; padding: 0 24px; }
+.game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.game-info { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); }
+.game-info strong { color: var(--ink); font-size: 16px; }
+
+/* Q card */
+.q-card {
+  background: var(--card); border: 2px solid var(--ink);
+  border-radius: 16px; padding: 28px 32px;
+  box-shadow: 5px 5px 0 var(--ink); margin-bottom: 22px;
+}
+.q-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+.q-word  { font-size: 42px; font-weight: 800; letter-spacing: -2px; line-height: 1; margin-bottom: 6px; }
+.q-type  { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 3px 8px; background: var(--ink); color: var(--paper); border-radius: 4px; margin-bottom: 6px; }
+.q-phonetic { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.q-hint { color: var(--muted); font-size: 13px; line-height: 1.6; }
+.q-definition { font-size: 16px; line-height: 1.7; }
+
+/* Options */
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.opt {
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 600;
+  padding: 16px 18px; border: 2px solid var(--border);
+  border-radius: 10px; cursor: pointer; background: var(--card);
+  text-align: left; transition: all 0.15s; line-height: 1.4;
+}
+.opt:hover:not(:disabled) { border-color: var(--ink); box-shadow: 3px 3px 0 var(--ink); transform: translate(-1px,-1px); }
+.opt.correct { background: #d4edda; border-color: var(--correct); color: #155724; }
+.opt.wrong   { background: #f8d7da; border-color: var(--wrong);   color: #721c24; }
+.opt:disabled { cursor: default; }
+
+/* Typing */
+.typing-input {
+  width: 100%; font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 20px; font-weight: 700;
+  padding: 16px 20px; border: 2px solid var(--border);
+  border-radius: 10px; outline: none; background: var(--card); transition: border-color 0.2s;
+}
+.typing-input:focus { border-color: var(--accent); }
+.typing-input.correct { border-color: var(--correct); background: #d4edda; color: #155724; }
+.typing-input.wrong   { border-color: var(--wrong);   background: #f8d7da; color: #721c24; }
+
+/* Feedback */
+.feedback { padding: 14px 18px; border-radius: 10px; font-size: 14px; line-height: 1.65; display: none; margin-top: 16px; }
+.feedback.show { display: block; }
+.feedback.correct-fb { background: #d4edda; border: 1.5px solid var(--correct); color: #155724; }
+.feedback.wrong-fb   { background: #f8d7da; border: 1.5px solid var(--wrong);   color: #721c24; }
+
+/* Flashcard */
+.flashcard-wrap { perspective: 1000px; margin-bottom: 24px; }
+.flashcard {
+  width: 100%; height: 260px; position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(.4,0,.2,1); cursor: pointer;
+}
+.flashcard.flipped { transform: rotateY(180deg); }
+.fc-front, .fc-back {
+  position: absolute; inset: 0;
+  border: 2px solid var(--ink); border-radius: 16px;
+  box-shadow: 5px 5px 0 var(--ink); backface-visibility: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 28px; text-align: center;
+}
+.fc-front { background: var(--card); }
+.fc-back  { transform: rotateY(180deg); background: var(--ink); color: var(--paper); }
+.fc-hint  { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: 14px; }
+.fc-back .fc-hint { color: #888; }
+.fc-nav { display: flex; justify-content: center; align-items: center; gap: 20px; }
+.fc-counter { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }
+
+/* Speak button */
+.speak-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border: 2px solid var(--border);
+  border-radius: 50%; background: var(--card); cursor: pointer;
+  font-size: 16px; transition: all 0.15s;
+  position: absolute; top: 14px; right: 14px; z-index: 10;
+}
+.speak-btn:hover { border-color: var(--accent2); background: rgba(47,125,232,0.08); transform: scale(1.1); }
+.speak-btn.speaking {
+  border-color: var(--accent2); background: rgba(47,125,232,0.15);
+  animation: pulse-ring 0.8s ease infinite;
+}
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(47,125,232,0.4); }
+  70%  { box-shadow: 0 0 0 8px rgba(47,125,232,0); }
+  100% { box-shadow: 0 0 0 0 rgba(47,125,232,0); }
+}
+
+/* Result */
+#resultScreen { max-width: 600px; margin: 40px auto; padding: 0 24px; text-align: center; }
+.result-score { font-size: 90px; font-weight: 800; letter-spacing: -5px; color: var(--accent); line-height: 1; margin: 16px 0 6px; }
+.result-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 24px; }
+.wrong-list { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 20px; text-align: left; margin: 20px 0; box-shadow: 4px 4px 0 var(--border); }
+.wrong-list h3 { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--wrong); margin-bottom: 12px; }
+.wrong-item { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; line-height: 1.6; }
+.wrong-item:last-child { border-bottom: none; }
+.chip { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 5px 14px; border-radius: 20px; }
+.chip-correct { background: #d4edda; color: #155724; }
+.chip-wrong   { background: #f8d7da; color: #721c24; }
+
+@keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+.animate-in { animation: slideUp 0.3s ease forwards; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+.shake { animation: shake 0.3s ease; }
+
+@media (max-width: 520px) {
+  .options { grid-template-columns: 1fr; }
+  .q-word { font-size: 30px; }
+  .result-score { font-size: 64px; }
+  header { padding: 16px 20px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Vocab<span>Quest</span></div>
+  <span class="badge">VOCABULARY TRAINER</span>
+</header>
+
+<!-- ── IMPORT SCREEN ── -->
+<div id="importScreen" class="screen active">
+  <div class="import-hero">
+    <h1>Learn your<br>vocabulary.</h1>
+    <p>Auto-loading <code style="font-family:'JetBrains Mono',monospace;background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">vocabulary.csv</code> from this repo</p>
+  </div>
+  <div class="import-box" style="max-width:820px;margin:0 auto;">
+    <h2>📂 CSV Status</h2>
+
+    <!-- Loading state -->
+    <div id="csvLoading">
+      <div class="csv-status" id="csvStatusMsg">Đang tải vocabulary.csv...</div>
+      <div class="loading-bar"><div class="loading-fill" id="loadingFill" style="width:60%"></div></div>
+    </div>
+
+    <!-- Loaded state (hidden initially) -->
+    <div class="csv-loaded hidden" id="csvLoaded">
+      <span class="icon">✅</span>
+      <div class="info">
+        <strong id="csvWordCount">0 words</strong>
+        <span id="csvFileName">vocabulary.csv</span>
+      </div>
+    </div>
+
+    <!-- Error state (hidden initially) -->
+    <div class="csv-error hidden" id="csvError">
+      <strong>⚠️ Không tải được vocabulary.csv</strong><br>
+      <span id="csvErrorMsg" style="font-size:12px;opacity:0.8;"></span>
+      <div style="margin-top:10px;">
+        <label style="font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;">
+          <input type="file" id="csvFilePicker" accept=".csv,.txt" style="display:none" onchange="loadFromFilePicker(this)">
+          <span style="padding:8px 16px;background:var(--ink);color:var(--paper);border-radius:8px;">📁 Chọn file CSV thủ công</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="format-hint" style="margin-top:14px;">
+      <b>Format vocabulary.csv:</b><br>
+      Vocabulary,Type,Phonetic,Definition,Example,Synonym,Antonym<br>
+      crucial,adj,/kruːʤəl/,extremely important,Your role is crucial,vital,unimportant
+    </div>
+
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-primary hidden" id="startBtn" onclick="goToMode()">▶ Start Learning</button>
+      <button class="btn btn-outline hidden" id="reloadBtn" onclick="loadCSV()">🔄 Reload CSV</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODE SCREEN ── -->
+<div id="modeScreen" class="screen">
+  <div class="mode-header">
+    <h1>Choose your game mode</h1>
+    <p id="modeLabel">Ready to study.</p>
+  </div>
+  <div class="mode-grid">
+    <div class="mode-card" onclick="startGame('flashcard')">
+      <div class="icon">🃏</div><h3>Flash Cards</h3>
+      <p>Flip cards to reveal definitions.</p>
+      <span class="diff diff-easy">EASY</span>
+    </div>
+    <div class="mode-card" onclick="startGame('multiple')">
+      <div class="icon">🎯</div><h3>Multiple Choice</h3>
+      <p>Pick the correct definition from 4 options.</p>
+      <span class="diff diff-medium">MEDIUM</span>
+    </div>
+    <div class="mode-card" onclick="startGame('reverse')">
+      <div class="icon">🔄</div><h3>Reverse Quiz</h3>
+      <p>See definition — guess the word.</p>
+      <span class="diff diff-medium">MEDIUM</span>
+    </div>
+    <div class="mode-card" onclick="startGame('typing')">
+      <div class="icon">⌨️</div><h3>Type the Word</h3>
+      <p>Read definition and type the word.</p>
+      <span class="diff diff-hard">HARD</span>
+    </div>
+    <div class="mode-card" onclick="startGame('synonym')">
+      <div class="icon">🔗</div><h3>Synonym Match</h3>
+      <p>Match words with their synonyms.</p>
+      <span class="diff diff-hard">HARD</span>
+    </div>
+  </div>
+  <div class="word-preview">
+    <h3>Word list</h3>
+    <div class="word-tags" id="wordTagsPreview"></div>
+  </div>
+</div>
+
+<!-- ── GAME SCREEN ── -->
+<div id="gameScreen" class="screen">
+  <div class="game-header">
+    <div class="game-info">Question <strong id="qNum">1</strong> / <span id="qTotal">10</span></div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <div class="game-info">✅ <strong id="scoreDisplay">0</strong></div>
+      <button class="btn-sm" onclick="showScreen('modeScreen')">← Back</button>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+  <!-- flashcard -->
+  <div id="flashcardMode" class="hidden">
+    <div class="flashcard-wrap">
+      <div class="flashcard" id="flashcard" onclick="flipCard()">
+        <div class="fc-front">
+          <button class="speak-btn" id="speakBtn" onclick="speakWord(event)" title="Phát âm">🔊</button>
+          <div class="q-label">WORD</div>
+          <div class="q-word" id="fcWord"></div>
+          <div class="q-phonetic" id="fcPhonetic"></div>
+          <div class="q-type" id="fcType"></div>
+          <div class="fc-hint">Click to flip</div>
+        </div>
+        <div class="fc-back">
+          <div class="q-label" style="color:#e8a07f">DEFINITION</div>
+          <div class="q-definition" id="fcDef" style="color:var(--paper)"></div>
+          <div class="q-hint" id="fcExample" style="color:#aaa;font-size:13px;margin-top:6px;"></div>
+          <div class="fc-hint">Click to flip back</div>
+        </div>
+      </div>
+    </div>
+    <div class="fc-nav">
+      <button class="btn btn-outline" onclick="fcNav(-1)">← Prev</button>
+      <span class="fc-counter" id="fcCounter">1 / 1</span>
+      <button class="btn btn-primary" onclick="fcNav(1)">Next →</button>
+    </div>
+    <!-- Voice picker -->
+    <div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;white-space:nowrap;">🔊 Voice</span>
+      <select id="voicePicker" onchange="onVoiceChange()"
+        style="flex:1;min-width:0;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--ink);outline:none;cursor:pointer;max-width:340px;">
+        <option>Loading voices...</option>
+      </select>
+      <button onclick="speak(questions[fcIndex]?questions[fcIndex].word:'hello',0.85,1)"
+        style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer;white-space:nowrap;transition:border-color 0.15s;"
+        onmouseover="this.style.borderColor='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'">▶ Test</button>
+    </div>
+  </div>
+
+  <!-- quiz -->
+  <div id="quizMode" class="hidden">
+    <div class="q-card animate-in" id="qCard">
+      <div class="q-label" id="qLabel">WORD</div>
+      <div id="qWordDisplay"></div>
+      <div id="qHint" class="q-hint"></div>
+    </div>
+    <div id="optionsContainer"></div>
+    <div class="feedback" id="feedback"></div>
+    <div style="margin-top:18px;text-align:right;">
+      <button class="btn btn-primary hidden" id="nextBtn" onclick="nextQuestion()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── RESULT SCREEN ── -->
+<div id="resultScreen" class="screen">
+  <div style="font-size:48px;" id="resEmoji">🎉</div>
+  <div class="result-score" id="resScore">0%</div>
+  <div class="result-label" id="resLabel">0 correct</div>
+  <div style="display:flex;gap:12px;justify-content:center;margin-bottom:20px;" id="resChips"></div>
+  <div class="wrong-list hidden" id="wrongList">
+    <h3>📖 Words to review</h3>
+    <div id="wrongItems"></div>
+  </div>
+  <div class="btn-row" style="justify-content:center;margin-top:16px;">
+    <button class="btn btn-primary" onclick="restartGame()">Play Again</button>
+    <button class="btn btn-outline" onclick="showScreen('modeScreen')">Change Mode</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+var vocab = [];
+var questions = [];
+var currentQ = 0;
+var score = 0;
+var answered = false;
+var wrongWords = [];
+var currentMode = '';
+var fcIndex = 0;
+var fcFlipped = false;
+
+// ══════════════════════════════════════
+// SCREEN
+// ══════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+// ══════════════════════════════════════
+// CSV LOADING
+// ══════════════════════════════════════
+var CSV_FILE = 'vocabulary.csv';
+
+function loadCSV() {
+  document.getElementById('csvLoading').style.display = 'block';
+  document.getElementById('csvLoaded').classList.add('hidden');
+  document.getElementById('csvError').classList.add('hidden');
+  document.getElementById('startBtn').classList.add('hidden');
+  document.getElementById('reloadBtn').classList.add('hidden');
+
+  // Add cache-busting so GitHub Pages always serves fresh CSV
+  var url = CSV_FILE + '?v=' + Date.now();
+  fetch(url)
+    .then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status + ' — file not found');
+      return res.text();
+    })
+    .then(function(text) {
+      parseCSV(text);
+    })
+    .catch(function(err) {
+      showCSVError(err.message);
+    });
+}
+
+function parseCSV(text) {
+  vocab = [];
+  var lines = text.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+  for (var i = 0; i < lines.length; i++) {
+    // Support tab and comma separated
+    var cols = lines[i].includes('\t') ? lines[i].split('\t') : lines[i].split(',');
+    if (cols.length < 4) continue;
+    var word = cols[0].trim();
+    if (!word || word.toLowerCase() === 'vocabulary' || word.toLowerCase() === 'word') continue;
+    vocab.push({
+      word:       cols[0].trim(),
+      type:       (cols[1]||'').trim(),
+      phonetic:   (cols[2]||'').trim(),
+      definition: (cols[3]||'').trim(),
+      example:    (cols[4]||'').trim(),
+      synonym:    (cols[5]||'').trim(),
+      antonym:    (cols[6]||'').trim()
+    });
+  }
+  if (vocab.length < 2) {
+    showCSVError('Parsed 0 words — check CSV format (need at least: word, type, phonetic, definition)');
+    return;
+  }
+  // Success
+  document.getElementById('csvLoading').style.display = 'none';
+  document.getElementById('csvLoaded').classList.remove('hidden');
+  document.getElementById('csvWordCount').textContent = vocab.length + ' words loaded';
+  document.getElementById('csvFileName').textContent = CSV_FILE;
+  document.getElementById('startBtn').classList.remove('hidden');
+  document.getElementById('reloadBtn').classList.remove('hidden');
+}
+
+function showCSVError(msg) {
+  document.getElementById('csvLoading').style.display = 'none';
+  document.getElementById('csvError').classList.remove('hidden');
+  document.getElementById('csvErrorMsg').textContent = msg;
+}
+
+function loadFromFilePicker(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    parseCSV(e.target.result);
+    document.getElementById('csvFileName').textContent = file.name;
+  };
+  reader.readAsText(file);
+}
+
+function goToMode() {
+  document.getElementById('modeLabel').textContent = vocab.length + ' words loaded — choose a mode.';
+  document.getElementById('wordTagsPreview').innerHTML = vocab.map(function(v){
+    return '<span class="word-tag">' + v.word + '</span>';
+  }).join('');
+  showScreen('modeScreen');
+}
+
+// Auto-load on page start
+window.addEventListener('DOMContentLoaded', function(){ loadCSV(); });
+
+// ══════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length-1; i > 0; i--) {
+    var j = Math.floor(Math.random()*(i+1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function isClose(a, b) {
+  if (Math.abs(a.length-b.length) > 2) return false;
+  var diff = 0;
+  for (var i = 0; i < Math.max(a.length,b.length); i++) if (a[i]!==b[i]) diff++;
+  return diff <= 1;
+}
+
+function updateProgress(cur, total) {
+  document.getElementById('progressFill').style.width = ((cur/total)*100) + '%';
+}
+
+// ══════════════════════════════════════
+// BUILD QUESTIONS
+// ══════════════════════════════════════
+function buildMultiple(item) {
+  var wrong = shuffle(vocab.filter(function(v){ return v.word !== item.word; })).slice(0,3).map(function(v){ return v.definition; });
+  return { type:'mc', word:item, promptType:'word', prompt:item.word, options:shuffle([item.definition].concat(wrong)), answer:item.definition };
+}
+function buildReverse(item) {
+  var wrong = shuffle(vocab.filter(function(v){ return v.word !== item.word; })).slice(0,3).map(function(v){ return v.word; });
+  return { type:'mc', word:item, promptType:'definition', prompt:item.definition, options:shuffle([item.word].concat(wrong)), answer:item.word };
+}
+function buildTyping(item) {
+  return { type:'typing', word:item, promptType:'word', prompt:item.definition, answer:item.word.toLowerCase() };
+}
+function buildSynonym(item) {
+  if (!item.synonym) return null;
+  var syns = item.synonym.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+  if (!syns.length) return null;
+  var wrong = shuffle(vocab.filter(function(v){ return v.word !== item.word && v.synonym; }))
+    .slice(0,3).map(function(v){ return v.synonym.split(',')[0].trim(); }).filter(Boolean);
+  if (!wrong.length) return null;
+  return { type:'mc', word:item, promptType:'synonym', prompt:item.word, options:shuffle([syns[0]].concat(wrong.slice(0,3))), answer:syns[0] };
+}
+
+// ══════════════════════════════════════
+// GAME
+// ══════════════════════════════════════
+function startGame(mode) {
+  currentMode = mode;
+  score = 0; currentQ = 0; answered = false; wrongWords = [];
+  fcIndex = 0; fcFlipped = false;
+
+  var pool = shuffle(vocab.slice());
+
+  if (mode === 'flashcard') {
+    questions = pool;
+    showScreen('gameScreen');
+    document.getElementById('flashcardMode').classList.remove('hidden');
+    document.getElementById('quizMode').classList.add('hidden');
+    showFlashcard();
+    return;
+  }
+
+  if (mode === 'multiple') questions = pool.map(buildMultiple);
+  else if (mode === 'reverse') questions = pool.map(buildReverse);
+  else if (mode === 'typing') questions = pool.map(buildTyping);
+  else if (mode === 'synonym') questions = pool.map(buildSynonym).filter(Boolean);
+
+  if (!questions.length) { alert('Not enough data for this mode.'); return; }
+  document.getElementById('qTotal').textContent = questions.length;
+  showScreen('gameScreen');
+  document.getElementById('flashcardMode').classList.add('hidden');
+  document.getElementById('quizMode').classList.remove('hidden');
+  showQuestion();
+}
+
+// ── FLASHCARD ──
+function showFlashcard() {
+  var item = questions[fcIndex];
+  if (fcFlipped) { document.getElementById('flashcard').classList.remove('flipped'); fcFlipped = false; }
+  document.getElementById('fcWord').textContent     = item.word;
+  document.getElementById('fcPhonetic').textContent = item.phonetic;
+  document.getElementById('fcType').textContent     = item.type;
+  document.getElementById('fcDef').textContent      = item.definition;
+  document.getElementById('fcExample').textContent  = item.example ? '"' + item.example + '"' : '';
+  document.getElementById('fcCounter').textContent  = (fcIndex+1) + ' / ' + questions.length;
+  document.getElementById('qNum').textContent       = fcIndex+1;
+  document.getElementById('qTotal').textContent     = questions.length;
+  document.getElementById('scoreDisplay').textContent = '';
+  updateProgress(fcIndex, questions.length);
+  setTimeout(function(){ speak(item.word, 0.85, 1); }, 300);
+}
+
+function flipCard() {
+  fcFlipped = !fcFlipped;
+  document.getElementById('flashcard').classList.toggle('flipped', fcFlipped);
+}
+
+function fcNav(dir) {
+  fcIndex = Math.max(0, Math.min(questions.length-1, fcIndex+dir));
+  showFlashcard();
+  if (fcIndex === questions.length-1 && dir === 1) {
+    setTimeout(function(){
+      if (confirm('Reviewed all cards! Go back to modes?')) showScreen('modeScreen');
+    }, 300);
+  }
+}
+
+// ── QUIZ ──
+function showQuestion() {
+  answered = false;
+  var q = questions[currentQ];
+  if (!q) { showResult(); return; }
+
+  document.getElementById('qNum').textContent = currentQ+1;
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').innerHTML = '';
+  updateProgress(currentQ, questions.length);
+
+  var qCard = document.getElementById('qCard');
+  qCard.classList.remove('animate-in');
+  void qCard.offsetWidth;
+  qCard.classList.add('animate-in');
+
+  var wordDisp = document.getElementById('qWordDisplay');
+  var qLabel   = document.getElementById('qLabel');
+  var qHint    = document.getElementById('qHint');
+
+  if (q.promptType === 'definition') {
+    qLabel.textContent = 'DEFINITION — What is the word?';
+    wordDisp.innerHTML = '<div class="q-definition">' + q.prompt + '</div>';
+    qHint.textContent  = q.word.phonetic || '';
+  } else if (q.promptType === 'synonym') {
+    qLabel.textContent = 'WORD — Choose a synonym';
+    wordDisp.innerHTML = '<div class="q-word">' + q.prompt + '</div><div class="q-type">' + q.word.type + '</div><div class="q-phonetic">' + q.word.phonetic + '</div>';
+    qHint.textContent  = 'Choose the correct synonym';
+  } else {
+    qLabel.textContent = q.type === 'typing' ? 'DEFINITION — Type the word' : 'WORD — Choose the definition';
+    wordDisp.innerHTML = '<div class="q-word">' + q.prompt + '</div><div class="q-type">' + q.word.type + '</div><div class="q-phonetic">' + q.word.phonetic + '</div>';
+    qHint.textContent  = q.word.example ? '"' + q.word.example + '"' : '';
+  }
+
+  var optCont = document.getElementById('optionsContainer');
+  if (q.type === 'typing') {
+    optCont.innerHTML = '<div><input class="typing-input" id="typingInput" placeholder="Type your answer..." autocomplete="off" autocorrect="off" spellcheck="false"></div>'
+      + '<div class="btn-row" style="margin-top:12px;"><button class="btn btn-primary" onclick="checkTyping()">Check ✓</button><button class="btn-sm" onclick="skipQ()">Skip</button></div>';
+    setTimeout(function(){
+      var el = document.getElementById('typingInput');
+      if (el) { el.focus(); el.addEventListener('keydown', function(e){ if(e.key==='Enter') checkTyping(); }); }
+    }, 50);
+  } else {
+    var html = '<div class="options">';
+    for (var i = 0; i < q.options.length; i++) {
+      html += '<button class="opt" onclick="checkMC(this)">' + q.options[i] + '</button>';
+    }
+    html += '</div>';
+    optCont.innerHTML = html;
+  }
+}
+
+function checkMC(btn) {
+  if (answered) return;
+  answered = true;
+  var q = questions[currentQ];
+  var chosen = btn.textContent.trim();
+  document.querySelectorAll('.opt').forEach(function(b){ b.disabled = true; });
+  if (chosen === q.answer) {
+    score++; btn.classList.add('correct');
+  } else {
+    btn.classList.add('wrong'); btn.classList.add('shake');
+    document.querySelectorAll('.opt').forEach(function(b){ if(b.textContent.trim()===q.answer) b.classList.add('correct'); });
+    wrongWords.push(q.word);
+  }
+  showFeedback(chosen === q.answer, q);
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('nextBtn').classList.remove('hidden');
+}
+
+function checkTyping() {
+  if (answered) return;
+  var input = document.getElementById('typingInput');
+  var val = input.value.trim().toLowerCase();
+  var q = questions[currentQ];
+  answered = true; input.disabled = true;
+  var correct = val === q.answer || isClose(val, q.answer);
+  if (correct) { score++; input.classList.add('correct'); }
+  else { input.classList.add('wrong'); wrongWords.push(q.word); }
+  showFeedback(correct, q);
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('nextBtn').classList.remove('hidden');
+}
+
+function skipQ() {
+  if (answered) return;
+  answered = true;
+  wrongWords.push(questions[currentQ].word);
+  showFeedback(false, questions[currentQ], true);
+  document.getElementById('nextBtn').classList.remove('hidden');
+}
+
+function showFeedback(correct, q, skipped) {
+  var fb = document.getElementById('feedback');
+  fb.className = 'feedback show ' + (correct ? 'correct-fb' : 'wrong-fb');
+  var msg = correct ? '✅ <strong>Correct!</strong>'
+    : (skipped ? '⏭ <strong>Skipped.</strong> Answer: <strong>' + q.answer + '</strong>'
+               : '❌ <strong>Wrong!</strong> Answer: <strong>' + q.answer + '</strong>');
+  if (q.word && q.word.synonym) msg += '<br><span style="font-size:12px">Synonym: ' + q.word.synonym + '</span>';
+  fb.innerHTML = msg;
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= questions.length) { showResult(); return; }
+  showQuestion();
+}
+
+// ── RESULT ──
+function showResult() {
+  showScreen('resultScreen');
+  var total = questions.length;
+  var pct = Math.round(score/total*100);
+  document.getElementById('resScore').textContent = pct + '%';
+  document.getElementById('resLabel').textContent = score + ' correct out of ' + total;
+  document.getElementById('resEmoji').textContent = pct>=90?'🏆':pct>=70?'🎉':pct>=50?'💪':'😢';
+  document.getElementById('resChips').innerHTML =
+    '<span class="chip chip-correct">✅ ' + score + ' Correct</span>' +
+    '<span class="chip chip-wrong">❌ ' + (total-score) + ' Wrong</span>';
+  var wl = document.getElementById('wrongList');
+  if (wrongWords.length > 0) {
+    wl.classList.remove('hidden');
+    document.getElementById('wrongItems').innerHTML = wrongWords.map(function(w){
+      return '<div class="wrong-item"><strong>' + w.word + '</strong> <span style="font-size:11px;color:var(--muted)">' + w.type + '</span><br>' + w.definition + '</div>';
+    }).join('');
+  } else { wl.classList.add('hidden'); }
+}
+
+function restartGame() { startGame(currentMode); }
+
+// ══════════════════════════════════════
+// SPEECH
+// ══════════════════════════════════════
+var selectedVoice = null;
+var VOICE_PRIORITY = [
+  'Google US English',
+  'Microsoft Aria Online (Natural)',
+  'Microsoft Guy Online (Natural)',
+  'Microsoft Jenny Online (Natural)',
+  'Karen','Samantha','Daniel',
+  'Google UK English Female',
+  'Google UK English Male',
+  'Microsoft Zira','Microsoft David'
+];
+
+function loadVoices() {
+  var voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return;
+  for (var p = 0; p < VOICE_PRIORITY.length; p++) {
+    for (var v = 0; v < voices.length; v++) {
+      if (voices[v].name === VOICE_PRIORITY[p]) { if (!selectedVoice) selectedVoice = voices[v]; break; }
+    }
+  }
+  if (!selectedVoice) {
+    for (var v = 0; v < voices.length; v++) {
+      if (voices[v].lang === 'en-US') { selectedVoice = voices[v]; break; }
+    }
+  }
+  if (!selectedVoice) {
+    for (var v = 0; v < voices.length; v++) {
+      if (voices[v].lang.startsWith('en')) { selectedVoice = voices[v]; break; }
+    }
+  }
+  buildVoicePicker(voices);
+}
+
+function buildVoicePicker(voices) {
+  var picker = document.getElementById('voicePicker');
+  if (!picker) return;
+  var enVoices = voices.filter(function(v){ return v.lang.startsWith('en'); });
+  picker.innerHTML = '';
+  for (var i = 0; i < enVoices.length; i++) {
+    var opt = document.createElement('option');
+    opt.value = enVoices[i].name;
+    opt.textContent = enVoices[i].name + ' (' + enVoices[i].lang + ')';
+    if (selectedVoice && enVoices[i].name === selectedVoice.name) opt.selected = true;
+    picker.appendChild(opt);
+  }
+}
+
+function onVoiceChange() {
+  var picker = document.getElementById('voicePicker');
+  if (!picker) return;
+  var voices = window.speechSynthesis.getVoices();
+  for (var v = 0; v < voices.length; v++) {
+    if (voices[v].name === picker.value) { selectedVoice = voices[v]; break; }
+  }
+  speak('Hello, this is a voice test.', 0.9, 1);
+}
+
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+  loadVoices();
+}
+
+function speak(text, rate, pitch) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var utt = new SpeechSynthesisUtterance(text);
+  utt.lang = 'en-US'; utt.rate = rate||0.9; utt.pitch = pitch||1;
+  if (selectedVoice) utt.voice = selectedVoice;
+  var btn = document.getElementById('speakBtn');
+  utt.onstart = function(){ if(btn) btn.classList.add('speaking'); };
+  utt.onend   = function(){ if(btn) btn.classList.remove('speaking'); };
+  utt.onerror = function(){ if(btn) btn.classList.remove('speaking'); };
+  window.speechSynthesis.speak(utt);
+}
+
+function speakWord(e) {
+  e.stopPropagation();
+  var item = questions[fcIndex];
+  if (!item) return;
+  speak(fcFlipped ? item.definition : item.word, 0.85, 1);
+}
+</script>
+</body>
+</html>
