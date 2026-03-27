@@ -267,6 +267,35 @@ header {
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
 .shake { animation: shake 0.3s ease; }
 
+/* VI TRANSLATION */
+.vi-wrap { margin-top: 8px; min-height: 22px; }
+.vi-trans {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--accent2); font-weight: 600;
+}
+.vi-trans.loading { color: var(--muted); font-weight: 400; font-style: italic; }
+.vi-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  background: var(--accent2); color: white;
+  padding: 1px 6px; border-radius: 4px; letter-spacing: 1px; flex-shrink: 0;
+}
+.vi-badge.dim { background: var(--muted); }
+.vi-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  padding: 3px 10px; border: 1.5px solid var(--accent2); border-radius: 6px;
+  cursor: pointer; color: var(--accent2); background: transparent; transition: all 0.15s;
+}
+.vi-btn:hover { background: var(--accent2); color: white; }
+.trans-all-row { margin-top: 10px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.trans-all-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  padding: 6px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+  cursor: pointer; color: var(--ink); background: var(--card); transition: all 0.15s;
+}
+.trans-all-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+.trans-all-btn:disabled { opacity: 0.5; cursor: default; }
+.trans-progress { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+
 @media (max-width: 520px) {
   .options { grid-template-columns: 1fr; }
   .q-word { font-size: 30px; }
@@ -336,6 +365,10 @@ header {
   <div class="mode-header">
     <h1>Choose your game mode</h1>
     <p id="modeLabel">Ready to study.</p>
+    <div class="trans-all-row">
+      <button class="trans-all-btn" id="transAllBtn" onclick="translateAll()">🌐 Dịch tất cả sang tiếng Việt</button>
+      <span class="trans-progress" id="transProgress"></span>
+    </div>
   </div>
   <div class="mode-grid">
     <div class="mode-card" onclick="startGame('flashcard')">
@@ -361,6 +394,16 @@ header {
     <div class="mode-card" onclick="startGame('synonym')">
       <div class="icon">🔗</div><h3>Synonym Match</h3>
       <p>Match words with their synonyms.</p>
+      <span class="diff diff-hard">HARD</span>
+    </div>
+    <div class="mode-card" id="modeEn2Vi" onclick="startViGame('en2vi')" style="display:none;">
+      <div class="icon">🇻🇳</div><h3>Anh → Việt</h3>
+      <p>Xem từ tiếng Anh, chọn nghĩa tiếng Việt.</p>
+      <span class="diff diff-medium">MEDIUM</span>
+    </div>
+    <div class="mode-card" id="modeVi2En" onclick="startViGame('vi2en')" style="display:none;">
+      <div class="icon">🔁</div><h3>Việt → Anh</h3>
+      <p>Xem nghĩa tiếng Việt, chọn từ tiếng Anh.</p>
       <span class="diff diff-hard">HARD</span>
     </div>
   </div>
@@ -391,12 +434,14 @@ header {
           <div class="q-word" id="fcWord"></div>
           <div class="q-phonetic" id="fcPhonetic"></div>
           <div class="q-type" id="fcType"></div>
+          <div class="vi-wrap" id="fcViWrap"><button class="vi-btn" onclick="translateOneFC(event)" style="pointer-events:all;">🌐 Dịch</button></div>
           <div class="fc-hint">Click to flip</div>
         </div>
         <div class="fc-back">
           <div class="q-label" style="color:#e8a07f">DEFINITION</div>
           <div class="q-definition" id="fcDef" style="color:var(--paper)"></div>
-          <div class="q-hint" id="fcExample" style="color:#aaa;font-size:13px;margin-top:6px;"></div>
+          <div id="fcViBack" style="margin-top:8px;font-size:13px;color:#7ec8f7;font-weight:600;min-height:18px;"></div>
+          <div class="q-hint" id="fcExample" style="color:#aaa;font-size:13px;margin-top:4px;"></div>
           <div class="fc-hint">Click to flip back</div>
         </div>
       </div>
@@ -425,6 +470,7 @@ header {
       <div class="q-label" id="qLabel">WORD</div>
       <div id="qWordDisplay"></div>
       <div id="qHint" class="q-hint"></div>
+      <div class="vi-wrap" id="qViWrap" style="display:none;"></div>
     </div>
     <div id="optionsContainer"></div>
     <div class="feedback" id="feedback"></div>
@@ -885,6 +931,155 @@ function speakWord(e) {
   var item = questions[fcIndex];
   if (!item) return;
   speak(fcFlipped ? item.definition : item.word, 0.85, 1);
+}
+
+// ══════════════════════════════════════
+// TRANSLATION (MyMemory API - free, no key needed)
+// ══════════════════════════════════════
+var translationCache = {};
+
+async function fetchTranslation(word) {
+  var url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(word) + '&langpair=en|vi';
+  var res = await fetch(url);
+  var data = await res.json();
+  if (data.responseStatus === 200 && data.responseData.translatedText) {
+    return data.responseData.translatedText;
+  }
+  throw new Error('Translation failed');
+}
+
+async function translateOne(word) {
+  if (translationCache[word] && !translationCache[word].loading) return;
+  translationCache[word] = { loading: true };
+  refreshViDisplays(word);
+  try {
+    var vi = await fetchTranslation(word);
+    translationCache[word] = { vi: vi };
+  } catch(e) {
+    translationCache[word] = { vi: '(lỗi)' };
+  }
+  refreshViDisplays(word);
+}
+
+function refreshViDisplays(word) {
+  // Refresh flashcard front
+  var fcItem = questions[fcIndex];
+  if (fcItem && fcItem.word === word) {
+    renderViWrap('fcViWrap', word, true);
+    renderViBack(word);
+  }
+  // Refresh quiz card
+  var qItem = questions[currentQ];
+  if (qItem && qItem.word && qItem.word.word === word) {
+    renderViWrap('qViWrap', word, false);
+  }
+}
+
+function renderViWrap(elId, word, isFC) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  el.style.display = '';
+  var cached = translationCache[word];
+  if (!cached) {
+    el.innerHTML = '<button class="vi-btn" data-word="' + word + '" onclick="handleViBtn(this)">'
+      + (isFC ? '🌐 Dịch' : '🌐 Dịch tiếng Việt') + '</button>';
+  } else if (cached.loading) {
+    el.innerHTML = '<span class="vi-trans loading"><span class="vi-badge dim">VI</span> Đang dịch...</span>';
+  } else {
+    el.innerHTML = '<span class="vi-trans"><span class="vi-badge">VI</span> ' + cached.vi + '</span>';
+  }
+}
+
+function renderViBack(word) {
+  var el = document.getElementById('fcViBack');
+  if (!el) return;
+  var cached = translationCache[word];
+  el.textContent = (cached && !cached.loading && cached.vi) ? '🇻🇳 ' + cached.vi : '';
+}
+
+function translateOneFC(e) {
+  e.stopPropagation();
+  var item = questions[fcIndex];
+  if (item) translateOne(item.word);
+}
+
+function handleViBtn(btn) {
+  var word = btn.getAttribute('data-word');
+  if (word) translateOne(word);
+}
+
+async function translateAll() {
+  var btn = document.getElementById('transAllBtn');
+  var prog = document.getElementById('transProgress');
+  var untranslated = vocab.filter(function(v){ return !translationCache[v.word]; });
+  if (!untranslated.length) { prog.textContent = '✅ Đã dịch hết!'; return; }
+  btn.disabled = true;
+  for (var i = 0; i < untranslated.length; i++) {
+    var item = untranslated[i];
+    prog.textContent = 'Đang dịch ' + (i+1) + '/' + untranslated.length + ': ' + item.word;
+    translationCache[item.word] = { loading: true };
+    try {
+      translationCache[item.word] = { vi: await fetchTranslation(item.word) };
+    } catch(e) {
+      translationCache[item.word] = { vi: '(lỗi)' };
+    }
+    refreshViDisplays(item.word);
+    // Respect rate limit: 1 req/sec is safe for MyMemory free tier
+    await new Promise(function(r){ setTimeout(r, 400); });
+  }
+  prog.textContent = '✅ Đã dịch ' + untranslated.length + ' từ!';
+  btn.textContent = '✅ Đã dịch xong';
+  btn.disabled = false;
+  // Show vi game modes
+  document.getElementById('modeEn2Vi').style.display = '';
+  document.getElementById('modeVi2En').style.display = '';
+}
+
+// Show quiz vi translation after answering
+var origShowQuestion = showQuestion;
+showQuestion = function() {
+  origShowQuestion();
+  // Show translate button for non-vi modes
+  var q = questions[currentQ];
+  var qViWrap = document.getElementById('qViWrap');
+  if (!q || !qViWrap) return;
+  if (q.promptType === 'word' || q.promptType === 'synonym' || !q.promptType) {
+    renderViWrap('qViWrap', q.word.word, false);
+  } else {
+    qViWrap.style.display = 'none';
+  }
+};
+
+// ── VI GAME MODES ──
+function startViGame(mode) {
+  var ready = vocab.filter(function(v){ return translationCache[v.word] && translationCache[v.word].vi && !translationCache[v.word].loading; });
+  if (ready.length < 4) { alert('Cần dịch ít nhất 4 từ trước. Bấm "Dịch tất cả sang tiếng Việt".'); return; }
+
+  currentMode = mode;
+  score = 0; currentQ = 0; answered = false; wrongWords = [];
+
+  var pool = shuffle(ready.slice());
+  if (mode === 'en2vi') {
+    questions = pool.map(function(item) {
+      var vi = translationCache[item.word].vi;
+      var wrong = shuffle(ready.filter(function(v){ return v.word !== item.word; }))
+        .slice(0,3).map(function(v){ return translationCache[v.word].vi; });
+      return { type:'mc', word:item, promptType:'en2vi', prompt:item.word, options:shuffle([vi].concat(wrong)), answer:vi };
+    });
+  } else {
+    questions = pool.map(function(item) {
+      var vi = translationCache[item.word].vi;
+      var wrong = shuffle(ready.filter(function(v){ return v.word !== item.word; }))
+        .slice(0,3).map(function(v){ return v.word; });
+      return { type:'mc', word:item, promptType:'vi2en', prompt:vi, options:shuffle([item.word].concat(wrong)), answer:item.word };
+    });
+  }
+
+  document.getElementById('qTotal').textContent = questions.length;
+  showScreen('gameScreen');
+  document.getElementById('flashcardMode').classList.add('hidden');
+  document.getElementById('quizMode').classList.remove('hidden');
+  showQuestion();
 }
 </script>
 </body>
