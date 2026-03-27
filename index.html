@@ -366,7 +366,7 @@ header {
     <h1>Choose your game mode</h1>
     <p id="modeLabel">Ready to study.</p>
     <div class="trans-all-row">
-      <button class="trans-all-btn" id="transAllBtn" onclick="translateAll()">🌐 Dịch tất cả sang tiếng Việt</button>
+      <button class="trans-all-btn" id="transAllBtn" onclick="checkViReady()">🇻🇳 Luyện Anh ↔ Việt</button>
       <span class="trans-progress" id="transProgress"></span>
     </div>
   </div>
@@ -434,7 +434,7 @@ header {
           <div class="q-word" id="fcWord"></div>
           <div class="q-phonetic" id="fcPhonetic"></div>
           <div class="q-type" id="fcType"></div>
-          <div class="vi-wrap" id="fcViWrap"><button class="vi-btn" onclick="translateOneFC(event)" style="pointer-events:all;">🌐 Dịch</button></div>
+          <div class="vi-wrap" id="fcViWrap"></div>
           <div class="fc-hint">Click to flip</div>
         </div>
         <div class="fc-back">
@@ -561,7 +561,8 @@ function parseCSV(text) {
       definition: (cols[3]||'').trim(),
       example:    (cols[4]||'').trim(),
       synonym:    (cols[5]||'').trim(),
-      antonym:    (cols[6]||'').trim()
+      antonym:    (cols[6]||'').trim(),
+      vietnamese: (cols[7]||'').trim()
     });
   }
   if (vocab.length < 2) {
@@ -599,6 +600,13 @@ function goToMode() {
   document.getElementById('wordTagsPreview').innerHTML = vocab.map(function(v){
     return '<span class="word-tag">' + v.word + '</span>';
   }).join('');
+  // Auto-show VI modes if CSV has Vietnamese column
+  var viCount = vocab.filter(function(v){ return v.vietnamese; }).length;
+  if (viCount > 0) {
+    document.getElementById('modeEn2Vi').style.display = '';
+    document.getElementById('modeVi2En').style.display = '';
+    document.getElementById('transProgress').textContent = '🇻🇳 ' + viCount + ' từ có tiếng Việt';
+  }
   showScreen('modeScreen');
 }
 
@@ -698,6 +706,17 @@ function showFlashcard() {
   document.getElementById('qTotal').textContent     = questions.length;
   document.getElementById('scoreDisplay').textContent = '';
   updateProgress(fcIndex, questions.length);
+  // Show Vietnamese translation
+  var fcViWrap = document.getElementById('fcViWrap');
+  if (fcViWrap) {
+    if (item.vietnamese) {
+      fcViWrap.innerHTML = '<span class="vi-trans"><span class="vi-badge">VI</span> ' + item.vietnamese + '</span>';
+    } else {
+      fcViWrap.innerHTML = '';
+    }
+  }
+  var fcViBack = document.getElementById('fcViBack');
+  if (fcViBack) fcViBack.textContent = item.vietnamese ? '🇻🇳 ' + item.vietnamese : '';
   setTimeout(function(){ speak(item.word, 0.85, 1); }, 300);
 }
 
@@ -750,6 +769,19 @@ function showQuestion() {
     qLabel.textContent = q.type === 'typing' ? 'DEFINITION — Type the word' : 'WORD — Choose the definition';
     wordDisp.innerHTML = '<div class="q-word">' + q.prompt + '</div><div class="q-type">' + q.word.type + '</div><div class="q-phonetic">' + q.word.phonetic + '</div>';
     qHint.textContent  = q.word.example ? '"' + q.word.example + '"' : '';
+  }
+
+  // Show Vietnamese from CSV
+  var qViWrap = document.getElementById('qViWrap');
+  if (qViWrap) {
+    var viWord = q.word && q.word.vietnamese;
+    if (viWord && q.promptType !== 'en2vi' && q.promptType !== 'vi2en') {
+      qViWrap.style.display = '';
+      qViWrap.innerHTML = '<span class="vi-trans"><span class="vi-badge">VI</span> ' + viWord + '</span>';
+    } else {
+      qViWrap.style.display = 'none';
+      qViWrap.innerHTML = '';
+    }
   }
 
   var optCont = document.getElementById('optionsContainer');
@@ -1008,29 +1040,40 @@ function handleViBtn(btn) {
   if (word) translateOne(word);
 }
 
+function checkViReady() {
+  var ready = vocab.filter(function(v){ return v.vietnamese; });
+  if (ready.length === 0) {
+    document.getElementById('transProgress').textContent = '⚠️ CSV chưa có cột Vietnamese';
+    return;
+  }
+  document.getElementById('transProgress').textContent = '✅ ' + ready.length + ' từ có tiếng Việt';
+  document.getElementById('modeEn2Vi').style.display = '';
+  document.getElementById('modeVi2En').style.display = '';
+}
+
+// Keep translateAll as fallback (uses MyMemory API for words without vietnamese column)
 async function translateAll() {
   var btn = document.getElementById('transAllBtn');
   var prog = document.getElementById('transProgress');
-  var untranslated = vocab.filter(function(v){ return !translationCache[v.word]; });
-  if (!untranslated.length) { prog.textContent = '✅ Đã dịch hết!'; return; }
+  var untranslated = vocab.filter(function(v){ return !v.vietnamese && !translationCache[v.word]; });
+  if (!untranslated.length) {
+    prog.textContent = '✅ Đã có tiếng Việt!';
+    document.getElementById('modeEn2Vi').style.display = '';
+    document.getElementById('modeVi2En').style.display = '';
+    return;
+  }
   btn.disabled = true;
   for (var i = 0; i < untranslated.length; i++) {
     var item = untranslated[i];
     prog.textContent = 'Đang dịch ' + (i+1) + '/' + untranslated.length + ': ' + item.word;
-    translationCache[item.word] = { loading: true };
     try {
-      translationCache[item.word] = { vi: await fetchTranslation(item.word) };
-    } catch(e) {
-      translationCache[item.word] = { vi: '(lỗi)' };
-    }
-    refreshViDisplays(item.word);
-    // Respect rate limit: 1 req/sec is safe for MyMemory free tier
+      var vi = await fetchTranslation(item.word);
+      item.vietnamese = vi;
+    } catch(e) { item.vietnamese = ''; }
     await new Promise(function(r){ setTimeout(r, 400); });
   }
-  prog.textContent = '✅ Đã dịch ' + untranslated.length + ' từ!';
-  btn.textContent = '✅ Đã dịch xong';
+  prog.textContent = '✅ Xong!';
   btn.disabled = false;
-  // Show vi game modes
   document.getElementById('modeEn2Vi').style.display = '';
   document.getElementById('modeVi2En').style.display = '';
 }
@@ -1052,8 +1095,8 @@ showQuestion = function() {
 
 // ── VI GAME MODES ──
 function startViGame(mode) {
-  var ready = vocab.filter(function(v){ return translationCache[v.word] && translationCache[v.word].vi && !translationCache[v.word].loading; });
-  if (ready.length < 4) { alert('Cần dịch ít nhất 4 từ trước. Bấm "Dịch tất cả sang tiếng Việt".'); return; }
+  var ready = vocab.filter(function(v){ return v.vietnamese; });
+  if (ready.length < 4) { alert('CSV chưa có cột Vietnamese hoặc quá ít từ có tiếng Việt.'); return; }
 
   currentMode = mode;
   score = 0; currentQ = 0; answered = false; wrongWords = [];
@@ -1061,18 +1104,19 @@ function startViGame(mode) {
   var pool = shuffle(ready.slice());
   if (mode === 'en2vi') {
     questions = pool.map(function(item) {
-      var vi = translationCache[item.word].vi;
+      var vi = item.vietnamese;
       var wrong = shuffle(ready.filter(function(v){ return v.word !== item.word; }))
-        .slice(0,3).map(function(v){ return translationCache[v.word].vi; });
+        .slice(0,3).map(function(v){ return v.vietnamese; }).filter(Boolean);
+      if (wrong.length < 2) return null;
       return { type:'mc', word:item, promptType:'en2vi', prompt:item.word, options:shuffle([vi].concat(wrong)), answer:vi };
-    });
+    }).filter(Boolean);
   } else {
     questions = pool.map(function(item) {
-      var vi = translationCache[item.word].vi;
+      var vi = item.vietnamese;
       var wrong = shuffle(ready.filter(function(v){ return v.word !== item.word; }))
         .slice(0,3).map(function(v){ return v.word; });
       return { type:'mc', word:item, promptType:'vi2en', prompt:vi, options:shuffle([item.word].concat(wrong)), answer:item.word };
-    });
+    }).filter(Boolean);
   }
 
   document.getElementById('qTotal').textContent = questions.length;
