@@ -3,7 +3,7 @@
 A clean, offline-friendly vocabulary trainer. Drop your CSV file in the repo and it loads automatically.
 
 ## 🚀 Live Demo
-> After enabling GitHub Pages: `https://YOUR-USERNAME.github.io/YOUR-REPO-NAME`
+> After enabling GitHub Pages: https://minsag.github.io/vocab_app/
 
 ---
 
@@ -12,7 +12,7 @@ A clean, offline-friendly vocabulary trainer. Drop your CSV file in the repo and
 ```
 /
 ├── index.html        ← The app (single file, no build needed)
-├── vocabulary.csv    ← Your word list (edit this!)
+├── vocabulary.tsv    ← Your word list (tab-separated, edit this!)
 └── README.md
 ```
 
@@ -20,7 +20,7 @@ A clean, offline-friendly vocabulary trainer. Drop your CSV file in the repo and
 
 ## 📋 CSV Format
 
-The file must be named **`vocabulary.csv`** and placed in the root of the repo.
+The file must be named **`vocabulary.tsv`** (tab-separated) and placed in the root of the repo.
 
 ```csv
 Vocabulary,Type,Phonetic,Definition,Example,Synonym,Antonym
