@@ -353,7 +353,7 @@ header {
         <span class="icon">✅</span>
         <div class="info">
           <strong id="csvWordCount">0 words</strong>
-          <span id="csvFileName">vocabulary.csv</span>
+          <span id="csvFileName">vocabulary.tsv</span>
         </div>
       </div>
       <!-- Error state -->
@@ -368,7 +368,7 @@ header {
         </div>
       </div>
       <div class="format-hint" style="margin-top:14px;">
-        <b>Format: Tab-separated (.csv) — copy thẳng từ Excel/Google Sheets</b><br>
+        <b>Format: Tab-separated (.tsv) — copy thẳng từ Excel/Google Sheets</b><br>
         Vocabulary [tab] Type [tab] Phonetic [tab] Definition [tab] Example [tab] Synonym [tab] Antonym [tab] Vietnamese<br>
         crucial [tab] adj [tab] /kruːʤəl/ [tab] extremely important [tab] Your role is crucial [tab] vital [tab] unimportant [tab] thiết yếu
       </div>
@@ -568,7 +568,7 @@ function showScreen(id) {
 // ══════════════════════════════════════
 // CSV LOADING
 // ══════════════════════════════════════
-var CSV_FILE = 'vocabulary.csv';
+var CSV_FILE = 'vocabulary.tsv';
 
 function loadCSV() {
   document.getElementById('csvLoading').style.display = 'block';
