@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tổng hợp Ngữ pháp Unit 1–7 | Understanding Grammar for IELTS</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf8f4;
+  --bg2: #f0ece4;
+  --text: #2c2825;
+  --text2: #5a524b;
+  --accent: #c0392b;
+  --accent2: #2980b9;
+  --accent3: #27ae60;
+  --accent4: #8e44ad;
+  --gold: #d4a017;
+  --border: #d5cfc5;
+  --card: #ffffff;
+  --shadow: 0 2px 16px rgba(44,40,37,.07);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+.container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+/* HEADER */
+header {
+  background: linear-gradient(135deg, #2c2825 0%, #4a3f38 100%);
+  color: #faf8f4;
+  padding: 60px 0 48px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+header::before {
+  content:'';
+  position:absolute; inset:0;
+  background: repeating-linear-gradient(45deg, transparent, transparent 30px, rgba(255,255,255,.015) 30px, rgba(255,255,255,.015) 60px);
+}
+header h1 {
+  font-family: 'Crimson Pro', serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: -.5px;
+  position: relative;
+}
+header p {
+  font-size: .95rem;
+  opacity: .7;
+  margin-top: 8px;
+  position: relative;
+}
+
+/* NAV */
+nav {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+nav .container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+nav a {
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 20px;
+  color: var(--text2);
+  background: var(--bg2);
+  transition: all .2s;
+}
+nav a:hover { background: var(--accent); color:#fff; }
+
+/* UNITS */
+.unit {
+  margin: 48px 0;
+}
+.unit-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid var(--accent);
+}
+.unit-num {
+  font-family: 'Crimson Pro', serif;
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+.unit-title {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.unit-title small { display:block; font-size:.85rem; color:var(--text2); font-weight:400; font-style:italic; }
+
+/* SECTION */
+.section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.section h3 {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent2);
+  margin-bottom: 14px;
+  padding-left: 14px;
+  border-left: 4px solid var(--accent2);
+}
+.section h4 {
+  font-weight: 700;
+  font-size: .95rem;
+  margin: 18px 0 8px;
+  color: var(--text);
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 14px;
+}
+th {
+  background: var(--bg2);
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+td {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+tr:nth-child(even) td { background: #fdfcfa; }
+
+/* FORMULA BOX */
+.formula {
+  background: linear-gradient(135deg, #eaf2f8, #ebf5fb);
+  border: 2px solid var(--accent2);
+  border-radius: 8px;
+  padding: 14px 20px;
+  margin: 12px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  text-align: center;
+  font-weight: 500;
+  color: #1a5276;
+}
+
+/* EXAMPLE */
+.example {
+  background: #fef9e7;
+  border-left: 4px solid var(--gold);
+  padding: 10px 16px;
+  margin: 10px 0;
+  border-radius: 0 6px 6px 0;
+  font-size: 14px;
+}
+.example .en { font-weight: 500; }
+.example .vi { color: var(--text2); font-style: italic; font-size: 13px; }
+
+/* TIP */
+.tip {
+  background: #eafaf1;
+  border-left: 4px solid var(--accent3);
+  padding: 12px 16px;
+  margin: 12px 0;
+  border-radius: 0 6px 6px 0;
+  font-size: 14px;
+}
+.tip::before { content:'💡 '; }
+
+/* WARNING */
+.warn {
+  background: #fdedec;
+  border-left: 4px solid var(--accent);
+  padding: 12px 16px;
+  margin: 12px 0;
+  border-radius: 0 6px 6px 0;
+  font-size: 14px;
+}
+.warn::before { content:'⚠️ '; }
+
+/* KEY */
+.key {
+  background: #f4ecf7;
+  border-left: 4px solid var(--accent4);
+  padding: 12px 16px;
+  margin: 12px 0;
+  border-radius: 0 6px 6px 0;
+  font-size: 14px;
+}
+.key::before { content:'🔑 '; font-size: 14px; }
+
+/* COMPARISON */
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 12px 0;
+}
+.compare > div {
+  background: var(--bg2);
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.compare > div strong { display:block; margin-bottom:6px; color: var(--accent2); }
+
+/* ARROW */
+.arrow { color: var(--accent); font-weight: 700; }
+
+/* SUB-SECTION LABEL */
+.label {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+.label-def { background: #d5f5e3; color: #1e8449; }
+.label-struct { background: #d6eaf8; color: #2471a3; }
+.label-use { background: #fdebd0; color: #ca6f1e; }
+.label-note { background: #fadbd8; color: #c0392b; }
+
+p { margin-bottom: 10px; }
+ul { margin: 8px 0 8px 20px; }
+li { margin-bottom: 5px; font-size: 14px; }
+
+/* EXERCISE */
+.exercise {
+  background: #f8f9fa;
+  border: 1px dashed var(--border);
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin: 12px 0;
+  font-size: 14px;
+}
+.exercise strong { color: var(--accent); }
+.answer { color: var(--accent3); font-weight: 600; }
+
+@media (max-width:600px) {
+  header h1 { font-size:1.6rem; }
+  .section { padding:18px 16px; }
+  .compare { grid-template-columns:1fr; }
+  .formula { font-size:12px; padding:10px 12px; }
+  nav a { font-size:11px; padding:4px 10px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1>📖 Tổng hợp Ngữ pháp Unit 1 – 7</h1>
+    <p>Understanding Grammar for IELTS — Sentence (ZIM Academy)</p>
+  </div>
+</header>
+
+<nav>
+  <div class="container">
+    <a href="#u1">Unit 1</a>
+    <a href="#u2-tense">Thì động từ</a>
+    <a href="#u2-modal">Modal Verbs</a>
+    <a href="#u2-passive">Bị động</a>
+    <a href="#u3-np">Cụm danh từ</a>
+    <a href="#u3-sva">Hòa hợp S-V</a>
+    <a href="#u4">Bổ ngữ ĐT</a>
+    <a href="#u5-adj">Tính từ & Trạng từ</a>
+    <a href="#u5-comp">So sánh</a>
+    <a href="#u6">Câu ghép & phức</a>
+    <a href="#u7">Paraphrasing</a>
+  </div>
+</nav>
+
+<!-- ============================== UNIT 1 ============================== -->
+<div class="container">
+
+<div class="unit" id="u1">
+  <div class="unit-header">
+    <div class="unit-num">01</div>
+    <div class="unit-title">Thành phần câu<small>Sentence Components</small></div>
+  </div>
+
+  <div class="section">
+    <h3>5 thành phần của câu tiếng Anh</h3>
+    <span class="label label-def">Định nghĩa</span>
+    <p>Mỗi câu trần thuật (declarative sentence) bắt buộc phải có <strong>Chủ ngữ (S)</strong> và <strong>Động từ (V)</strong>. Ba thành phần còn lại — Tân ngữ (O), Bổ ngữ (C), Trạng ngữ (A) — xuất hiện tùy theo nội dung muốn truyền đạt.</p>
+
+    <table>
+      <tr><th>Thành phần</th><th>Vai trò</th><th>Vị trí</th><th>Ví dụ</th></tr>
+      <tr><td><strong>Chủ ngữ (S)</strong></td><td>Chủ thể của hành động</td><td>Đứng <strong>trước</strong> động từ</td><td><em>She</em> runs.</td></tr>
+      <tr><td><strong>Động từ (V)</strong></td><td>Miêu tả hành động / trạng thái</td><td>Đứng <strong>sau</strong> chủ ngữ</td><td>She <em>runs</em>.</td></tr>
+      <tr><td><strong>Tân ngữ (O)</strong></td><td>Đối tượng chịu tác động</td><td>Đứng <strong>sau</strong> động từ</td><td>He threw <em>the ball</em>.</td></tr>
+      <tr><td><strong>Bổ ngữ (C)</strong></td><td>Bổ sung thông tin cho S / V / O</td><td>Sau linking verb hoặc sau O</td><td>I am <em>happy</em>.</td></tr>
+      <tr><td><strong>Trạng ngữ (A)</strong></td><td>Thời gian, địa điểm, mục đích, cách thức…</td><td>Linh hoạt (đầu / cuối câu)</td><td>She runs <em>every day</em>.</td></tr>
+    </table>
+
+    <h4>Bổ ngữ — 3 loại chính</h4>
+    <table>
+      <tr><th>Loại</th><th>Vị trí</th><th>Ví dụ</th></tr>
+      <tr><td>Bổ ngữ cho S</td><td>Sau linking verb (be, become, feel, seem…)</td><td>She became <em>a teacher</em>.</td></tr>
+      <tr><td>Bổ ngữ cho V</td><td>Dạng to-V, V-ing, that-clause</td><td>I want <em>to visit</em> Phu Quoc.</td></tr>
+      <tr><td>Bổ ngữ cho O</td><td>Sau tân ngữ</td><td>I found the lesson <em>very interesting</em>.</td></tr>
+    </table>
+
+    <h4>Trạng ngữ — 6 loại</h4>
+    <p>Thời gian (<em>in 1998</em>), Địa điểm (<em>in Hanoi</em>), Mục đích (<em>to go to work</em>), Tần suất (<em>daily</em>), Cách thức (<em>quickly</em>), Mức độ (<em>significantly</em>).</p>
+
+    <div class="key"><strong>Ghi nhớ:</strong> S luôn đứng trước V. S + V là bộ đôi bắt buộc. Thiếu một trong hai → câu sai ngữ pháp.</div>
+
+    <div class="tip"><strong>Mẹo nhớ thứ tự:</strong> <strong>S – V – O – C – A</strong> → "Sáng Vui, Ông Chú Ăn" 😄</div>
+  </div>
+</div>
+
+<!-- ============================== UNIT 2 — THÌ ============================== -->
+<div class="unit" id="u2-tense">
+  <div class="unit-header">
+    <div class="unit-num">02</div>
+    <div class="unit-title">Động từ — Thì động từ<small>Verb Tenses</small></div>
+  </div>
+
+  <div class="section">
+    <h3>Tổng quan: 5 loại động từ & 4 dạng biến đổi</h3>
+    <table>
+      <tr><th>Loại động từ</th><th>Ý nghĩa</th><th>Ví dụ</th></tr>
+      <tr><td>Ngoại động từ (Transitive)</td><td>Có tân ngữ đi sau</td><td>He <em>helped</em> me.</td></tr>
+      <tr><td>Nội động từ (Intransitive)</td><td>Không cần tân ngữ</td><td>I <em>sleep</em> whenever I can.</td></tr>
+      <tr><td>Động từ "to be"</td><td>Miêu tả tồn tại, trạng thái</td><td>Education <em>is</em> essential.</td></tr>
+      <tr><td>Trợ động từ (be/do/have/will)</td><td>Kết hợp với V chính → thì, phủ định, nghi vấn</td><td>Students <em>are</em> living…</td></tr>
+      <tr><td>Động từ khuyết thiếu (Modal)</td><td>Bổ sung ý nghĩa: khả năng, nghĩa vụ…</td><td>Parents <em>should</em> encourage…</td></tr>
+    </table>
+
+    <h4>4 dạng biến đổi của động từ</h4>
+    <table>
+      <tr><th>Dạng</th><th>Cách tạo</th><th>Ví dụ</th></tr>
+      <tr><td>Nguyên thể (base form)</td><td>Không thay đổi</td><td>play, go, be</td></tr>
+      <tr><td>V-s/es</td><td>+s (hầu hết); +es (ch, sh, s, x, z, phụ âm+o); phụ âm+y → ies</td><td>plays, watches, flies</td></tr>
+      <tr><td>V-ing (hiện tại phân từ)</td><td>Thêm -ing</td><td>playing, running</td></tr>
+      <tr><td>V-ed / V-PII (quá khứ / quá khứ phân từ)</td><td>+ed hoặc bất quy tắc</td><td>played, gone, been</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>5 thì quan trọng trong IELTS Writing</h3>
+
+    <!-- HIỆN TẠI ĐƠN -->
+    <h4>1. Hiện tại đơn (Present Simple)</h4>
+    <span class="label label-use">Cách dùng</span>
+    <p>Hành động lặp lại, sự thật chung, ít thay đổi.</p>
+    <div class="formula">S + V(s/es) &nbsp;&nbsp;|&nbsp;&nbsp; S + do/does not + V(nguyên thể)</div>
+    <div class="example">
+      <div class="en">The world's population <strong>increases</strong> every year.</div>
+      <div class="vi">Dân số thế giới tăng mỗi năm.</div>
+    </div>
+    <div class="tip"><strong>Dấu hiệu nhận biết:</strong> every day, often, usually, always, nowadays, in general…</div>
+
+    <!-- HIỆN TẠI TIẾP DIỄN -->
+    <h4>2. Hiện tại tiếp diễn (Present Continuous)</h4>
+    <span class="label label-use">Cách dùng</span>
+    <p>Hành động đang diễn ra tại thời điểm nói; xu hướng đang thay đổi.</p>
+    <div class="formula">S + is/are + V-ing &nbsp;&nbsp;|&nbsp;&nbsp; S + is/are not + V-ing</div>
+    <div class="example">
+      <div class="en">The number of overweight people <strong>is increasing</strong>.</div>
+      <div class="vi">Số người thừa cân đang tăng lên.</div>
+    </div>
+    <div class="tip"><strong>Dấu hiệu:</strong> now, at the moment, these days, currently…</div>
+
+    <!-- HIỆN TẠI HOÀN THÀNH -->
+    <h4>3. Hiện tại hoàn thành (Present Perfect)</h4>
+    <span class="label label-use">Cách dùng</span>
+    <p>Hành động bắt đầu trong quá khứ, <strong>để lại kết quả ở hiện tại</strong>.</p>
+    <div class="formula">S + has/have + V-PII &nbsp;&nbsp;|&nbsp;&nbsp; S + has/have not + V-PII</div>
+    <div class="example">
+      <div class="en">The Internet <strong>has become</strong> an integral part of our lives.</div>
+      <div class="vi">Internet đã trở thành phần không thể thiếu trong cuộc sống.</div>
+    </div>
+    <div class="tip"><strong>Dấu hiệu:</strong> since, for, recently, over the past few years, up until now, so far…</div>
+
+    <!-- QUÁ KHỨ ĐƠN -->
+    <h4>4. Quá khứ đơn (Past Simple)</h4>
+    <span class="label label-use">Cách dùng</span>
+    <p>Hành động bắt đầu và <strong>kết thúc</strong> trong quá khứ.</p>
+    <div class="formula">S + V-ed (quá khứ) &nbsp;&nbsp;|&nbsp;&nbsp; S + did not + V(nguyên thể)</div>
+    <div class="example">
+      <div class="en">Vietnam's population <strong>increased</strong> sharply to 90 million in 2014.</div>
+      <div class="vi">Dân số VN tăng vọt đến 90 triệu người năm 2014.</div>
+    </div>
+    <div class="tip"><strong>Dấu hiệu:</strong> in 2010, yesterday, last year, ago, in the 19th century…</div>
+
+    <!-- TƯƠNG LAI ĐƠN -->
+    <h4>5. Tương lai đơn (Future Simple)</h4>
+    <span class="label label-use">Cách dùng</span>
+    <p>Dự đoán, sự việc sẽ xảy ra trong tương lai.</p>
+    <div class="formula">S + will + V(nguyên thể) &nbsp;&nbsp;|&nbsp;&nbsp; S + will not + V(nguyên thể)</div>
+    <div class="example">
+      <div class="en">Vietnam's population <strong>will increase</strong> to over 100 million in the next 5 years.</div>
+      <div class="vi">Dân số VN sẽ tăng đến hơn 100 triệu trong 5 năm tới.</div>
+    </div>
+    <div class="tip"><strong>Dấu hiệu:</strong> in the future, tomorrow, in the next…, it is predicted that…</div>
+  </div>
+
+  <div class="section">
+    <h3>Bảng tổng hợp 5 thì</h3>
+    <table>
+      <tr><th>Thì</th><th>Khẳng định</th><th>Phủ định</th><th>Dùng khi</th></tr>
+      <tr><td>Hiện tại đơn</td><td>S + V(s/es)</td><td>S + do/does not + V</td><td>Sự thật, thói quen, Task 2</td></tr>
+      <tr><td>Hiện tại tiếp diễn</td><td>S + is/are + V-ing</td><td>S + is/are not + V-ing</td><td>Xu hướng đang thay đổi</td></tr>
+      <tr><td>Hiện tại hoàn thành</td><td>S + has/have + V-PII</td><td>S + has/have not + V-PII</td><td>Ảnh hưởng từ QK → HT</td></tr>
+      <tr><td>Quá khứ đơn</td><td>S + V-ed</td><td>S + did not + V</td><td>Số liệu quá khứ, Task 1</td></tr>
+      <tr><td>Tương lai đơn</td><td>S + will + V</td><td>S + will not + V</td><td>Dự đoán tương lai</td></tr>
+    </table>
+
+    <h4>Lưu ý trong IELTS Writing</h4>
+    <div class="warn"><strong>Task 1:</strong> Xem <em>mốc thời gian</em> trong biểu đồ → chọn thì phù hợp. Dữ liệu quá khứ → Past Simple. Biểu đồ có "now" → Present Perfect cho sự thay đổi.</div>
+    <div class="warn"><strong>Task 2:</strong> Hầu hết dùng Present Simple. Dùng các thì khác khi nói về xu hướng (tiếp diễn), ảnh hưởng (hoàn thành), quá khứ (quá khứ đơn), dự đoán (tương lai đơn).</div>
+  </div>
+
+  <!-- BÀI TẬP THÌ -->
+  <div class="section">
+    <h3>Bài tập mẫu — Thì động từ (có giải thích)</h3>
+
+    <div class="exercise">
+      <p><strong>1.</strong> The air in some big cities ______ more polluted.</p>
+      <p class="answer">→ A. is becoming</p>
+      <p>📝 "đang trở nên" → hành động đang diễn ra → <strong>hiện tại tiếp diễn</strong>. Dấu hiệu: xu hướng đang thay đổi.</p>
+    </div>
+    <div class="exercise">
+      <p><strong>2.</strong> The government ______ adopting some modern transport systems… <em>recently</em>.</p>
+      <p class="answer">→ C. has tried</p>
+      <p>📝 "recently" = gần đây → <strong>hiện tại hoàn thành</strong>. Hành động bắt đầu QK, kết quả đến HT.</p>
+    </div>
+    <div class="exercise">
+      <p><strong>3.</strong> In <em>the next thirty years</em>, all fossil fuels ______ replaced…</p>
+      <p class="answer">→ C. will be</p>
+      <p>📝 "in the next thirty years" → tương lai → <strong>tương lai đơn</strong> + bị động = will be + V-PII.</p>
+    </div>
+    <div class="exercise">
+      <p><strong>4.</strong> People <em>often</em> ______ the latest trends…</p>
+      <p class="answer">→ B. follow</p>
+      <p>📝 "often" = trạng từ chỉ tần suất → <strong>hiện tại đơn</strong>.</p>
+    </div>
+    <div class="exercise">
+      <p><strong>6.</strong> <em>In 2010</em>, the number of ill people… ______ only 100…</p>
+      <p class="answer">→ A. was</p>
+      <p>📝 "In 2010" → mốc thời gian quá khứ → <strong>quá khứ đơn</strong>.</p>
+    </div>
+    <div class="exercise">
+      <p><strong>8.</strong> <em>Nowadays</em>, education ______ an important role…</p>
+      <p class="answer">→ D. plays</p>
+      <p>📝 "Nowadays" → sự thật ở hiện tại → <strong>hiện tại đơn</strong>.</p>
+    </div>
+
+    <div class="tip"><strong>Mẹo chọn thì nhanh:</strong> Nhìn <em>trạng từ chỉ thời gian</em> trước → xác định mốc thời gian → chọn thì. Đây là cách chắc chắn nhất!</div>
+  </div>
+</div>
+
+<!-- ============================== UNIT 2 — MODAL VERBS ============================== -->
+<div class="unit" id="u2-modal">
+  <div class="unit-header">
+    <div class="unit-num">02</div>
+    <div class="unit-title">Động từ khuyết thiếu<small>Modal Verbs</small></div>
+  </div>
+
+  <div class="section">
+    <h3>Cấu trúc chung</h3>
+    <div class="formula">
+      ✅ S + Modal + V(nguyên thể)<br>
+      ❌ S + Modal + not + V(nguyên thể)
+    </div>
+    <div class="warn">Modal verb <strong>không bao giờ</strong> đứng một mình — luôn cần V chính phía sau. Không chia -s/-es/-ed.</div>
+
+    <h4>5 loại ý nghĩa của Modal Verbs</h4>
+    <table>
+      <tr><th>Loại</th><th>Modal</th><th>Ý nghĩa</th><th>Ví dụ</th></tr>
+      <tr><td><strong>1. Khả năng thực hiện</strong></td><td>can, could, be able to</td><td>Có thể làm / biết làm</td><td>Most people <em>can</em> read.</td></tr>
+      <tr><td><strong>2. Khả năng xảy ra</strong></td><td>may, might, can, could, will, must</td><td>Có thể sẽ xảy ra</td><td>The number <em>may</em> increase.</td></tr>
+      <tr><td><strong>3. Sự cần thiết / nghĩa vụ</strong></td><td>must, have to, need to</td><td>Phải, cần phải</td><td>Employees <em>have to</em> follow policies.</td></tr>
+      <tr><td><strong>4. Lời khuyên</strong></td><td>should, ought to</td><td>Nên</td><td>The government <em>should</em> invest more.</td></tr>
+      <tr><td><strong>5. Sự cho phép</strong></td><td>can, may, must not</td><td>Được phép / không được phép</td><td>People <em>must not</em> break the law.</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>Phân biệt quan trọng: must vs. have to</h3>
+    <div class="compare">
+      <div>
+        <strong>must (chủ quan)</strong>
+        Người nói/viết <em>cảm thấy</em> hành động cần thiết → mang tính cá nhân.<br>
+        <em>I must go to bed right now.</em>
+      </div>
+      <div>
+        <strong>have to (khách quan)</strong>
+        Bị hoàn cảnh bắt buộc → phù hợp IELTS Writing hơn!<br>
+        <em>Employees have to wear uniform.</em>
+      </div>
+    </div>
+    <div class="key"><strong>Trong IELTS Writing:</strong> Dùng <strong>"have to"</strong> thay vì "must" để giữ tính khách quan cho bài viết.</div>
+  </div>
+</div>
+
+<!-- ============================== UNIT 2 — BỊ ĐỘNG ============================== -->
+<div class="unit" id="u2-passive">
+  <div class="unit-header">
+    <div class="unit-num">02</div>
+    <div class="unit-title">Câu bị động<small>Passive Voice</small></div>
+  </div>
+
+  <div class="section">
+    <h3>Định nghĩa & Cấu trúc</h3>
+    <span class="label label-def">Định nghĩa</span>
+    <p>Câu bị động = câu mà <strong>chủ ngữ chịu tác động</strong> từ hành động của chủ thể khác. Dùng khi muốn nhấn mạnh đối tượng bị tác động hơn là người gây ra hành động.</p>
+
+    <div class="formula">S + to be (chia thì) + V-PII + (by O)</div>
+
+    <div class="compare">
+      <div>
+        <strong>Chủ động (Active)</strong>
+        Parents punish bad children.<br>
+        → Nhấn mạnh: Parents
+      </div>
+      <div>
+        <strong>Bị động (Passive)</strong>
+        Bad children are punished (by parents).<br>
+        → Nhấn mạnh: Bad children
+      </div>
+    </div>
+
+    <div class="tip">"by O" có thể lược bỏ nếu thông tin về chủ thể không quan trọng: <em>The bridge was built 30 years ago.</em></div>
+
+    <h4>Bảng chia bị động theo thì</h4>
+    <table>
+      <tr><th>Thì</th><th>Công thức bị động</th><th>Ví dụ</th></tr>
+      <tr><td>Hiện tại đơn</td><td>am/is/are + V-PII</td><td>Children <em>are affected</em> by violence.</td></tr>
+      <tr><td>Hiện tại tiếp diễn</td><td>am/is/are being + V-PII</td><td>Children <em>are being affected</em>.</td></tr>
+      <tr><td>Hiện tại hoàn thành</td><td>has/have been + V-PII</td><td>Children <em>have been affected</em>.</td></tr>
+      <tr><td>Quá khứ đơn</td><td>was/were + V-PII</td><td>Children <em>were affected</em>.</td></tr>
+      <tr><td>Tương lai đơn</td><td>will be + V-PII</td><td>Children <em>will be affected</em>.</td></tr>
+      <tr><td>Modal + V</td><td>modal + be + V-PII</td><td>Children <em>should be protected</em>.</td></tr>
+    </table>
+
+    <div class="key"><strong>Mẹo nhớ:</strong> Bị động = <strong>"be" + V3</strong> (cột 3 bảng ĐTBQT). Luôn chia "be" theo thì tương ứng.</div>
+  </div>
+</div>
+
+<!-- ============================== UNIT 3 — CỤM DANH TỪ ============================== -->
+<div class="unit" id="u3-np">
+  <div class="unit-header">
+    <div class="unit-num">03</div>
+    <div class="unit-title">Chủ ngữ — Cụm danh từ<small>Noun Phrases</small></div>
+  </div>
+
+  <div class="section">
+    <h3>Cấu trúc cụm danh từ</h3>
+    <div class="formula">Lượng từ + Hạn định từ + Tính từ + Danh từ bổ nghĩa + <strong>Danh từ chính</strong></div>
+    <div class="example">
+      <div class="en">A lot of | the | good | Math | <strong>teachers</strong></div>
+      <div class="vi">Lượng từ | Hạn định | Tính từ | DT bổ nghĩa | DT chính</div>
+    </div>
+
+    <h4>Danh từ đếm được vs. Không đếm được</h4>
+    <table>
+      <tr><th>Đếm được</th><th>Không đếm được</th></tr>
+      <tr><td>Có dạng số ít / số nhiều: a cat → cats</td><td>Không đi cùng số đếm: water, money, information</td></tr>
+      <tr><td>+s, +es, +ies, +ves</td><td>Luôn chia V số ít: <em>Money <strong>is</strong></em> important.</td></tr>
+    </table>
+
+    <div class="warn"><strong>Lỗi thường gặp:</strong> information, advice, homework, news, furniture → KHÔNG đếm được → không thêm -s, không dùng "a/an".</div>
+
+    <h4>Thứ tự tính từ (nếu có ≥ 2 tính từ)</h4>
+    <div class="formula">Ý kiến → Kích cỡ → Tuổi → Hình dạng → Màu sắc → Nguồn gốc → Chất liệu → Loại → Mục đích</div>
+    <div class="tip"><strong>Mẹo nhớ:</strong> <strong>O-S-A-Sh-C-O-M-T-P</strong> (Opinion–Size–Age–Shape–Color–Origin–Material–Type–Purpose)</div>
+
+    <h4>Lượng từ thông dụng</h4>
+    <table>
+      <tr><th>Đi với đếm được SỐ NHIỀU</th><th>Đi với không đếm được</th><th>Đi với CẢ HAI</th></tr>
+      <tr><td>many, a number of, several, few, a few</td><td>much, a great deal of, little, a little</td><td>a lot of, plenty of, some, any, most, all</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ============================== UNIT 3 — HÒA HỢP S-V ============================== -->
+<div class="unit" id="u3-sva">
+  <div class="unit-header">
+    <div class="unit-num">03</div>
+    <div class="unit-title">Sự hòa hợp Chủ ngữ — Động từ<small>Subject-Verb Agreement</small></div>
+  </div>
+
+  <div class="section">
+    <h3>Quy tắc cốt lõi</h3>
+    <p>Động từ phải chia theo chủ ngữ: chủ ngữ số ít → V số ít; chủ ngữ số nhiều → V số nhiều.</p>
+
+    <h4>Chủ ngữ → V số NHIỀU</h4>
+    <table>
+      <tr><th>Loại chủ ngữ</th><th>Ví dụ</th></tr>
+      <tr><td>Danh từ đếm được số nhiều</td><td>These problems <strong>demand</strong> solutions.</td></tr>
+      <tr><td>A number of + N số nhiều</td><td>A number of schools <strong>are</strong> shut down.</td></tr>
+      <tr><td>The majority of + N số nhiều</td><td>The majority of vehicles <strong>are</strong> motorcycles.</td></tr>
+      <tr><td>Both, all, several, many + N</td><td>All citizens <strong>have to</strong> be aware.</td></tr>
+    </table>
+
+    <h4>Chủ ngữ → V số ÍT</h4>
+    <table>
+      <tr><th>Loại chủ ngữ</th><th>Ví dụ</th></tr>
+      <tr><td>Danh từ đếm được số ít</td><td>This problem <strong>demands</strong> solutions.</td></tr>
+      <tr><td>Danh từ không đếm được</td><td>Money <strong>is</strong> a motive for crime.</td></tr>
+      <tr><td>The number of + N</td><td>The number of students <strong>has</strong> increased.</td></tr>
+      <tr><td>V-ing / To-V làm chủ ngữ</td><td>Smoking <strong>causes</strong> cancer.</td></tr>
+      <tr><td>Mệnh đề danh từ (That…)</td><td>That he passed <strong>surprises</strong> everyone.</td></tr>
+      <tr><td>Each, every, either, neither + N</td><td>Each student <strong>is</strong> responsible.</td></tr>
+    </table>
+
+    <div class="warn"><strong>Bẫy kinh điển:</strong> "A number of" (= nhiều) → V số nhiều ↔ "The number of" (= con số) → V số ít.</div>
+    <div class="key"><strong>Mẹo:</strong> Tìm <strong>danh từ chính</strong> (head noun) trong cụm chủ ngữ → chia V theo nó, bỏ qua các thành phần bổ nghĩa ở giữa.</div>
+  </div>
+</div>
+
+<!-- ============================== UNIT 4 ============================== -->
+<div class="unit" id="u4">
+  <div class="unit-header">
+    <div class="unit-num">04</div>
+    <div class="unit-title">Bổ ngữ của động từ<small>Verb Complements</small></div>
+  </div>
+
+  <div class="section">
+    <h3>3 dạng bổ ngữ chính</h3>
+
+    <h4>1. V + to-V</h4>
+    <p>Một số động từ luôn đi với to-V: <strong>want, need, decide, plan, hope, agree, promise, expect, refuse, manage, learn, tend, fail, afford, attempt</strong>…</p>
+    <div class="example">
+      <div class="en">Many people <strong>want to study</strong> abroad.</div>
+    </div>
+
+    <h4>2. V + V-ing</h4>
+    <p>Một số động từ luôn đi với V-ing: <strong>enjoy, avoid, consider, suggest, mind, finish, deny, practice, risk, keep, imagine</strong>…</p>
+    <div class="example">
+      <div class="en">Children should <strong>avoid playing</strong> video games too much.</div>
+    </div>
+
+    <h4>3. V + that-clause (Mệnh đề danh từ)</h4>
+    <p>Các động từ: <strong>think, believe, argue, claim, suggest, state, assume, prove</strong>…</p>
+    <div class="example">
+      <div class="en">Many experts <strong>believe that</strong> technology will replace human workers.</div>
+    </div>
+
+    <div class="warn"><strong>Lỗi thường gặp:</strong> Nhầm V + to-V với V + V-ing. Ví dụ: <em>avoid to play ❌</em> → <em>avoid playing ✅</em>. Cần học thuộc nhóm V đi với to-V và nhóm đi với V-ing.</div>
+
+    <div class="tip"><strong>Mẹo:</strong> Nhóm V-ing thường liên quan đến hành động <em>đang xảy ra / đã xảy ra</em>. Nhóm to-V thường hướng về <em>tương lai / mong muốn</em>.</div>
+  </div>
+</div>
+
+<!-- ============================== UNIT 5 — TÍNH TỪ & TRẠNG TỪ ============================== -->
+<div class="unit" id="u5-adj">
+  <div class="unit-header">
+    <div class="unit-num">05</div>
+    <div class="unit-title">Tính từ và Trạng từ<small>Adjectives & Adverbs</small></div>
+  </div>
+
+  <div class="section">
+    <h3>Tính từ (Adjective)</h3>
+    <span class="label label-def">Định nghĩa</span>
+    <p>Bổ sung thông tin về tính chất, trạng thái của đối tượng.</p>
+
+    <h4>Vị trí của tính từ</h4>
+    <table>
+      <tr><th>Vị trí</th><th>Ví dụ</th></tr>
+      <tr><td>Trước danh từ</td><td><em>Careless</em> driving causes accidents.</td></tr>
+      <tr><td>Sau "be"</td><td>The traffic <em>is</em> <em>terrible</em>.</td></tr>
+      <tr><td>Sau V cảm giác (feel, seem, look, appear…)</td><td>It <em>appears</em> <em>terrible</em>.</td></tr>
+      <tr><td>Sau V biến đổi (become, get, turn…)</td><td>Congestion has <em>become</em> <em>more serious</em>.</td></tr>
+    </table>
+
+    <h4>Tính từ V-ing vs. V-ed</h4>
+    <div class="compare">
+      <div>
+        <strong>V-ing → miêu tả đặc tính của SỰ VẬT</strong>
+        The results are <em>disappointing</em>.<br>
+        (Kết quả gây thất vọng)
+      </div>
+      <div>
+        <strong>V-ed → miêu tả cảm xúc của CON NGƯỜI</strong>
+        Students are <em>disappointed</em>.<br>
+        (Học sinh cảm thấy thất vọng)
+      </div>
+    </div>
+    <div class="key"><strong>Mẹo:</strong> V-ing = "gây ra cảm giác" (tác nhân). V-ed = "bị/được cảm giác" (người trải nghiệm).</div>
+  </div>
+
+  <div class="section">
+    <h3>Trạng từ (Adverb)</h3>
+    <span class="label label-def">Định nghĩa</span>
+    <p>Bổ nghĩa cho <strong>động từ, tính từ, trạng từ khác</strong>, hoặc cả mệnh đề.</p>
+
+    <h4>Phân loại trạng từ</h4>
+    <table>
+      <tr><th>Loại</th><th>Ví dụ</th></tr>
+      <tr><td>Tần suất</td><td>always, usually, often, rarely, never</td></tr>
+      <tr><td>Cách thức</td><td>quickly, carefully, effectively</td></tr>
+      <tr><td>Mức độ</td><td>significantly, extremely, highly</td></tr>
+      <tr><td>Thời gian</td><td>recently, nowadays, currently</td></tr>
+      <tr><td>Nối câu (Linking)</td><td>however, therefore, moreover, furthermore</td></tr>
+    </table>
+
+    <div class="tip"><strong>Cách tạo trạng từ:</strong> Hầu hết = Tính từ + <strong>-ly</strong>. Ví dụ: quick → quickly, significant → significantly.</div>
+    <div class="warn"><strong>Ngoại lệ:</strong> good → <em>well</em> (không phải "goodly"); fast, hard, late, early → giữ nguyên dạng.</div>
+  </div>
+</div>
+
+<!-- ============================== UNIT 5 — SO SÁNH ============================== -->
+<div class="unit" id="u5-comp">
+  <div class="unit-header">
+    <div class="unit-num">05</div>
+    <div class="unit-title">So sánh<small>Comparison</small></div>
+  </div>
+
+  <div class="section">
+    <h3>3 dạng so sánh</h3>
+
+    <h4>1. So sánh hơn (Comparative)</h4>
+    <div class="formula">S + V + Adj/Adv<sub>so sánh hơn</sub> + than + O</div>
+    <table>
+      <tr><th>Loại tính từ</th><th>Cách biến đổi</th><th>Ví dụ</th></tr>
+      <tr><td>1 âm tiết</td><td>+ er</td><td>great → great<strong>er</strong></td></tr>
+      <tr><td>Kết thúc -e</td><td>+ r</td><td>nice → nice<strong>r</strong></td></tr>
+      <tr><td>Kết thúc phụ âm+y</td><td>đổi y → ier</td><td>happy → happ<strong>ier</strong></td></tr>
+      <tr><td>≥ 2 âm tiết</td><td>more + adj</td><td><strong>more</strong> important</td></tr>
+    </table>
+    <div class="example">
+      <div class="en">Life in the city is <strong>more interesting than</strong> life in the countryside.</div>
+    </div>
+
+    <h4>2. So sánh hơn nhất (Superlative)</h4>
+    <div class="formula">S + V + the + Adj/Adv<sub>so sánh nhất</sub></div>
+    <p>1 âm tiết: +est; ≥ 2 âm tiết: the most + adj.</p>
+
+    <h4>3. So sánh bằng (Equal)</h4>
+    <div class="formula">S + V + as + Adj/Adv + as + O</div>
+
+    <h4>Tính từ / Trạng từ bất quy tắc</h4>
+    <table>
+      <tr><th>Gốc</th><th>So sánh hơn</th><th>So sánh nhất</th></tr>
+      <tr><td>good / well</td><td>better</td><td>best</td></tr>
+      <tr><td>bad / badly</td><td>worse</td><td>worst</td></tr>
+      <tr><td>far</td><td>farther / further</td><td>farthest / furthest</td></tr>
+      <tr><td>little</td><td>less</td><td>least</td></tr>
+      <tr><td>many / much</td><td>more</td><td>most</td></tr>
+    </table>
+
+    <div class="warn"><strong>Lỗi thường gặp:</strong> <em>more better ❌</em> → <em>better ✅</em>. Không dùng "more" + tính từ đã có dạng -er.</div>
+    <div class="tip"><strong>So sánh kém:</strong> less + adj + than (so sánh kém hơn), the least + adj (kém nhất).</div>
+  </div>
+</div>
+
+<!-- ============================== UNIT 6 ============================== -->
+<div class="unit" id="u6">
+  <div class="unit-header">
+    <div class="unit-num">06</div>
+    <div class="unit-title">Câu có nhiều hơn một mệnh đề<small>Compound, Complex & Compound-Complex Sentences</small></div>
+  </div>
+
+  <div class="section">
+    <h3>4 loại câu trần thuật</h3>
+    <table>
+      <tr><th>Loại câu</th><th>Cấu trúc</th><th>Ví dụ</th></tr>
+      <tr><td><strong>Câu đơn</strong></td><td>1 mệnh đề độc lập</td><td>She runs.</td></tr>
+      <tr><td><strong>Câu ghép</strong></td><td>≥ 2 mệnh đề độc lập + liên từ đẳng lập</td><td>She runs, <strong>and</strong> I walk.</td></tr>
+      <tr><td><strong>Câu phức</strong></td><td>1 MĐ chính + ≥ 1 MĐ phụ</td><td><strong>Because</strong> it rains, I stay home.</td></tr>
+      <tr><td><strong>Câu phức ghép</strong></td><td>≥ 2 MĐ chính + ≥ 1 MĐ phụ</td><td><strong>Although</strong> it rains, she goes out <strong>and</strong> I stay.</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>Lesson 6.1: Câu ghép (Compound Sentences)</h3>
+    <span class="label label-struct">Cấu trúc</span>
+    <div class="formula">MĐ độc lập 1 + <strong>liên từ đẳng lập</strong> + MĐ độc lập 2</div>
+    <p><strong>Liên từ đẳng lập: FANBOYS</strong> = <strong>F</strong>or, <strong>A</strong>nd, <strong>N</strong>or, <strong>B</strong>ut, <strong>O</strong>r, <strong>Y</strong>et, <strong>S</strong>o</p>
+
+    <h4>4 nhóm liên từ phổ biến</h4>
+    <table>
+      <tr><th>Nhóm</th><th>Từ nối</th><th>Vị trí</th></tr>
+      <tr><td><strong>"And"</strong> (thêm thông tin)</td><td>and, in addition, furthermore, moreover, not only…but also…</td><td>Giữa câu (sau dấu , hoặc ;)</td></tr>
+      <tr><td><strong>"Or"</strong> (lựa chọn)</td><td>or, either…or…</td><td>Giữa câu</td></tr>
+      <tr><td><strong>"But"</strong> (đối lập)</td><td>but, however, nevertheless, while, whereas</td><td>Giữa câu (sau , hoặc ;)</td></tr>
+      <tr><td><strong>"So"</strong> (kết quả)</td><td>so, therefore, as a result, consequently</td><td>Giữa câu</td></tr>
+    </table>
+    <div class="warn"><strong>Dấu câu:</strong> Trước FANBOYS dùng dấu phẩy (,). Trước however, therefore, moreover, nevertheless dùng dấu chấm phẩy (;) hoặc dấu chấm.</div>
+  </div>
+
+  <div class="section">
+    <h3>Lesson 6.2: Câu phức — Mệnh đề danh từ</h3>
+    <span class="label label-def">Định nghĩa</span>
+    <p>Mệnh đề bắt đầu với <strong>that, if/whether, hoặc từ để hỏi</strong> (what, which, where, when, why, how).</p>
+
+    <h4>Các vai trò của mệnh đề danh từ</h4>
+    <table>
+      <tr><th>Vai trò</th><th>Ví dụ</th></tr>
+      <tr><td>Bổ ngữ cho V</td><td>I think <strong>that</strong> healthcare should be free.</td></tr>
+      <tr><td>Bổ ngữ cho "to be"</td><td>The truth is <strong>that</strong> we don't know.</td></tr>
+      <tr><td>Làm chủ ngữ</td><td><strong>That</strong> the environment is damaged concerns governments.</td></tr>
+      <tr><td>Sau tính từ</td><td>People are convinced <strong>that</strong> advertising is harmful.</td></tr>
+      <tr><td>Sau danh từ</td><td>The fact <strong>that</strong> the regulation has no effect…</td></tr>
+    </table>
+    <div class="key">Khi mệnh đề danh từ làm <strong>chủ ngữ</strong> → động từ chia <strong>số ít</strong>.</div>
+  </div>
+
+  <div class="section">
+    <h3>Lesson 6.2: Câu phức — Mệnh đề quan hệ (Relative Clauses)</h3>
+    <span class="label label-def">Định nghĩa</span>
+    <p>Bổ sung thông tin cho danh từ / cụm danh từ / mệnh đề đứng trước nó.</p>
+
+    <div class="formula">Đối tượng + <strong>Từ quan hệ</strong> + (S) + V …</div>
+
+    <h4>Các từ quan hệ</h4>
+    <table>
+      <tr><th>Từ quan hệ</th><th>Thay thế cho</th><th>Vai trò trong MĐ</th><th>Ví dụ</th></tr>
+      <tr><td><strong>who, that</strong></td><td>Người</td><td>Chủ ngữ</td><td>Children <strong>who</strong> play sports…</td></tr>
+      <tr><td><strong>whom</strong></td><td>Người</td><td>Tân ngữ</td><td>The person <strong>whom</strong> I met…</td></tr>
+      <tr><td><strong>which, that</strong></td><td>Vật / sự việc</td><td>Chủ ngữ / Tân ngữ</td><td>Competitions <strong>which</strong> are held…</td></tr>
+      <tr><td><strong>where</strong></td><td>Nơi chốn</td><td>Trạng ngữ</td><td>The place <strong>where</strong> events take place.</td></tr>
+      <tr><td><strong>when</strong></td><td>Thời gian</td><td>Trạng ngữ</td><td>The year <strong>when</strong> he graduated.</td></tr>
+      <tr><td><strong>whose</strong></td><td>Sở hữu</td><td>Sở hữu</td><td>The man <strong>whose</strong> car was stolen.</td></tr>
+    </table>
+
+    <div class="tip"><strong>Mẹo:</strong> Mệnh đề quan hệ <strong>luôn đứng ngay sau</strong> đối tượng được miêu tả. Nếu tách ra → sai vị trí.</div>
+  </div>
+
+  <div class="section">
+    <h3>Lesson 6.3: Câu phức — Mệnh đề trạng ngữ (Adverb Clauses)</h3>
+
+    <table>
+      <tr><th>Loại</th><th>Liên từ phụ thuộc</th><th>Ví dụ</th></tr>
+      <tr><td><strong>Thời gian</strong></td><td>when, before, after, while, as soon as</td><td><strong>After</strong> the storm swept through, vehicles were damaged.</td></tr>
+      <tr><td><strong>Nguyên nhân</strong></td><td>because, since, as</td><td><strong>Because</strong> students focus on part-time jobs, their results suffer.</td></tr>
+      <tr><td><strong>Mục đích</strong></td><td>so that, in order that</td><td>Parents work at home <strong>so that</strong> they can spend more time with children.</td></tr>
+      <tr><td><strong>Nhượng bộ</strong></td><td>although, though, even though, while, whereas</td><td><strong>Although</strong> the environment is damaged, no action has been taken.</td></tr>
+      <tr><td><strong>Điều kiện</strong></td><td>if, unless, provided that</td><td><strong>If</strong> problems are not dealt with, the ecosystem will be damaged.</td></tr>
+    </table>
+
+    <div class="formula">
+      Cấu trúc: <strong>Liên từ + MĐ phụ, MĐ chính</strong> &nbsp;HOẶC&nbsp; <strong>MĐ chính + Liên từ + MĐ phụ</strong>
+    </div>
+
+    <div class="warn"><strong>Lưu ý dấu phẩy:</strong> MĐ phụ đứng <strong>trước</strong> → cần dấu phẩy. MĐ phụ đứng <strong>sau</strong> → thường không cần.</div>
+
+    <h4>Thay thế mệnh đề mục đích:</h4>
+    <div class="formula">so that + S + V = to / in order to / so as to + V(nguyên thể)</div>
+    <div class="example">
+      <div class="en">People wear face masks <strong>so that</strong> they could avoid dust.</div>
+      <div class="en">= People wear face masks <strong>in order to</strong> avoid dust.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== UNIT 7 ============================== -->
+<div class="unit" id="u7">
+  <div class="unit-header">
+    <div class="unit-num">07</div>
+    <div class="unit-title">Kỹ thuật viết lại câu (Paraphrasing)<small>Paraphrasing Techniques for IELTS Writing</small></div>
+  </div>
+
+  <div class="section">
+    <h3>Paraphrasing là gì?</h3>
+    <p>Viết lại câu bằng ngôn từ của mình, <strong>giữ nguyên ý nghĩa gốc</strong>. Kỹ năng quan trọng trong IELTS Writing để tránh lặp từ và thể hiện năng lực ngôn ngữ.</p>
+
+    <div class="formula">
+      <strong>3 bước viết lại câu:</strong><br>
+      Bước 1: Đọc hiểu ý nghĩa câu gốc<br>
+      Bước 2: Thay từ đồng nghĩa<br>
+      Bước 3: Áp dụng 1 hoặc nhiều thủ thuật bên dưới
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>4 thủ thuật viết lại câu</h3>
+
+    <h4>Thủ thuật 1: Đổi cấu trúc câu (Chủ động ↔ Bị động)</h4>
+    <div class="example">
+      <div class="en">Employers should <strong>provide</strong> employees with better salary. (chủ động)</div>
+      <div class="en"><span class="arrow">→</span> Employees should <strong>be provided</strong> with better salary. (bị động)</div>
+      <div class="en"><span class="arrow">→</span> Employees should <strong>receive</strong> better salary. (đổi V: provide → receive)</div>
+    </div>
+
+    <h4>Thủ thuật 2: Đổi dạng từ (V → N hoặc ngược lại)</h4>
+    <div class="example">
+      <div class="en">The government should <strong>support</strong> local businesses. (support = V)</div>
+      <div class="en"><span class="arrow">→</span> The government should <strong>provide support for</strong> local businesses. (support = N)</div>
+    </div>
+
+    <h4>Thủ thuật 3: Sử dụng chủ ngữ giả (It & There)</h4>
+    <div class="example">
+      <div class="en">People <strong>need to</strong> protect the environment.</div>
+      <div class="en"><span class="arrow">→</span> <strong>It is necessary</strong> for people to protect the environment.</div>
+    </div>
+    <div class="example">
+      <div class="en">Smoking <strong>should be restricted</strong> in public places.</div>
+      <div class="en"><span class="arrow">→</span> <strong>There should be</strong> restriction on smoking in public places.</div>
+    </div>
+
+    <h4>Thủ thuật 4: Thêm thành phần bổ nghĩa / giải thích</h4>
+    <div class="example">
+      <div class="en">The government should support <strong>local businesses</strong>.</div>
+      <div class="en"><span class="arrow">→</span> The government should support <strong>businesses that operate locally</strong>. (dùng MĐ quan hệ giải thích)</div>
+    </div>
+
+    <h4>Bảng tổng hợp thủ thuật</h4>
+    <table>
+      <tr><th>Thủ thuật</th><th>Mô tả</th><th>Tín hiệu áp dụng</th></tr>
+      <tr><td>1. Đổi cấu trúc</td><td>Active ↔ Passive, đảo S-O</td><td>Câu có ngoại động từ</td></tr>
+      <tr><td>2. Đổi dạng từ</td><td>V → N, N → V, Adj → N</td><td>Từ có nhiều dạng (support, develop…)</td></tr>
+      <tr><td>3. Chủ ngữ giả</td><td>It is + adj + for sb to V / There is/are…</td><td>Câu có should, need, must</td></tr>
+      <tr><td>4. Bổ nghĩa</td><td>Thêm MĐ quan hệ, giải thích nghĩa</td><td>Từ có thể định nghĩa lại</td></tr>
+    </table>
+
+    <div class="key"><strong>Công thức IELTS Task 2 thường gặp:</strong><br>
+    Many people believe that… <span class="arrow">→</span> It is believed that…<br>
+    People should… <span class="arrow">→</span> It is necessary for people to…</div>
+  </div>
+
+  <div class="section">
+    <h3>Ví dụ thực hành tổng hợp</h3>
+    <div class="exercise">
+      <p><strong>Câu gốc:</strong> Many people say that exercise is key to health while others believe that a balanced diet is more important.</p>
+      <p><strong>Bước phân tích:</strong></p>
+      <p>• "Many people say that" → <em>It is usually said that</em> (chủ ngữ giả + bị động)</p>
+      <p>• "exercise" → <em>physical training</em> (giải thích nghĩa)</p>
+      <p>• "key to" → <em>the most vital element in</em> (giải thích nghĩa)</p>
+      <p>• "health" → <em>a healthy life</em> (đổi dạng từ: N → Adj + N)</p>
+      <p>• "a balanced diet" → <em>a proper eating habit</em> (từ đồng nghĩa)</p>
+      <p><strong>Kết quả:</strong></p>
+      <p class="answer">→ Physical training is usually said to be the most vital element in a healthy life while others think it is more necessary to have proper eating habits.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== TỔNG KẾT ============================== -->
+<div class="unit">
+  <div class="unit-header">
+    <div class="unit-num">📋</div>
+    <div class="unit-title">Tổng kết — Checklist ôn tập nhanh</div>
+  </div>
+  <div class="section">
+    <table>
+      <tr><th>Unit</th><th>Chủ đề</th><th>Điều PHẢI nhớ</th></tr>
+      <tr><td>1</td><td>Thành phần câu</td><td>S + V là bắt buộc. O, C, A tùy ngữ cảnh.</td></tr>
+      <tr><td>2.1</td><td>Thì động từ</td><td>5 thì IELTS. Nhìn trạng từ thời gian → chọn thì.</td></tr>
+      <tr><td>2.2</td><td>Modal Verbs</td><td>Modal + V nguyên thể. Dùng "have to" thay "must" trong IELTS.</td></tr>
+      <tr><td>2.3</td><td>Bị động</td><td>S + be + V-PII. Chia "be" theo thì.</td></tr>
+      <tr><td>3.1</td><td>Cụm danh từ</td><td>Thứ tự: Lượng từ → Hạn định → Tính từ → DT bổ nghĩa → DT chính.</td></tr>
+      <tr><td>3.2</td><td>Hòa hợp S-V</td><td>"A number of" → V nhiều. "The number of" → V ít.</td></tr>
+      <tr><td>4</td><td>Bổ ngữ ĐT</td><td>V + to-V vs. V + V-ing: học thuộc nhóm.</td></tr>
+      <tr><td>5.1</td><td>Adj & Adv</td><td>V-ing = đặc tính sự vật. V-ed = cảm xúc con người.</td></tr>
+      <tr><td>5.2</td><td>So sánh</td><td>1 âm tiết: -er/-est. ≥ 2: more/most. Nhớ bất quy tắc.</td></tr>
+      <tr><td>6</td><td>Câu ghép & phức</td><td>FANBOYS cho câu ghép. Liên từ phụ thuộc cho câu phức.</td></tr>
+      <tr><td>7</td><td>Paraphrasing</td><td>4 thủ thuật: đổi cấu trúc, đổi dạng từ, chủ ngữ giả, bổ nghĩa.</td></tr>
+    </table>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<footer style="text-align:center; padding:40px 0 30px; color:var(--text2); font-size:13px;">
+  Tổng hợp từ sách "Understanding Grammar for IELTS – Sentence" (ZIM Academy)<br>
+  Bản tóm tắt học tập • Không dùng cho mục đích thương mại
+</footer>
+
+</body>
+</html>
