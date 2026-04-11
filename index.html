@@ -219,6 +219,46 @@ header {
 .typing-input.correct { border-color: var(--correct); background: #d4edda; color: #155724; }
 .typing-input.wrong   { border-color: var(--wrong);   background: #f8d7da; color: #721c24; }
 
+/* Fill-in-the-blank */
+.fitb-sentence {
+  font-size: 19px; font-weight: 600; line-height: 1.8;
+  margin-bottom: 6px; color: var(--ink);
+}
+.fitb-blank {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 17px; font-weight: 700;
+  color: var(--accent); letter-spacing: 3px;
+  border-bottom: 3px solid var(--accent);
+  padding: 0 4px; min-width: 40px; text-align: center;
+  vertical-align: middle;
+}
+.fitb-meta {
+  font-size: 13px; color: var(--muted); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.hint-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  padding: 3px 10px; border: 1.5px solid var(--border);
+  border-radius: 6px; cursor: pointer; background: var(--card);
+  color: var(--muted); transition: all 0.15s; letter-spacing: 0.5px;
+}
+.hint-btn:hover { border-color: var(--yellow, #f59e0b); color: var(--yellow, #f59e0b); }
+.hint-btn:disabled { opacity: 0.4; cursor: default; }
+.fitb-hint-text {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  color: var(--accent2); font-weight: 600; letter-spacing: 1px;
+}
+.fitb-tries {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted);
+}
+.fitb-input-wrap { position: relative; }
+.fitb-input-wrap .char-count {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--muted); pointer-events: none;
+}
+
 /* Feedback */
 .feedback { padding: 14px 18px; border-radius: 10px; font-size: 14px; line-height: 1.65; display: none; margin-top: 16px; }
 .feedback.show { display: block; }
@@ -748,7 +788,29 @@ function buildReverse(item) {
   return { type:'mc', word:item, promptType:'definition', prompt:item.definition, options:shuffle([item.word].concat(wrong)), answer:item.word };
 }
 function buildTyping(item) {
-  return { type:'typing', word:item, promptType:'word', prompt:item.definition, answer:item.word.toLowerCase() };
+  // Use example sentence if available, else fall back to definition
+  var hasSentence = item.example && item.example.trim().length > 0;
+  var answerWord = item.word.toLowerCase().trim();
+  if (hasSentence) {
+    // Replace the word in the sentence (case-insensitive) with blank marker
+    var re = new RegExp('\\b' + escapeRegex(item.word.trim()) + '\\b', 'gi');
+    var blanked = item.example.replace(re, '§BLANK§');
+    if (blanked.includes('§BLANK§')) {
+      return {
+        type: 'typing', word: item, promptType: 'fitb',
+        sentence: item.example,
+        blankedSentence: blanked,
+        prompt: item.definition,
+        answer: answerWord,
+        hintRevealed: 0
+      };
+    }
+  }
+  return { type:'typing', word:item, promptType:'word', prompt:item.definition, answer:answerWord, hintRevealed:0 };
+}
+
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 function buildSynonym(item) {
   if (!item.synonym) return null;
@@ -956,6 +1018,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ── QUIZ ──
 function showQuestion() {
   answered = false;
+  typingTries = 0;
   var q = questions[currentQ];
   if (!q) { showResult(); return; }
 
@@ -984,9 +1047,26 @@ function showQuestion() {
     wordDisp.innerHTML = '<div class="q-word">' + q.prompt + '</div><div class="q-type">' + q.word.type + '</div><div class="q-phonetic">' + q.word.phonetic + '</div>';
     qHint.textContent  = 'Choose the correct synonym';
   } else {
-    qLabel.textContent = q.type === 'typing' ? 'DEFINITION — Type the word' : 'WORD — Choose the definition';
-    wordDisp.innerHTML = '<div class="q-word">' + q.prompt + '</div><div class="q-type">' + q.word.type + '</div><div class="q-phonetic">' + q.word.phonetic + '</div>';
-    qHint.textContent  = q.word.example ? '"' + q.word.example + '"' : '';
+    if (q.type === 'typing' && q.promptType === 'fitb') {
+      qLabel.textContent = '✏️ ĐIỀN VÀO CHỖ TRỐNG';
+      // Build sentence display with blank
+      var wordLen = q.answer.length;
+      var dashes = '_ '.repeat(wordLen).trim();
+      var sentHtml = q.blankedSentence.replace(/§BLANK§/g,
+        '<span class="fitb-blank" id="fitbBlank">' + dashes + '</span>');
+      wordDisp.innerHTML = '<div class="fitb-sentence">' + sentHtml + '</div>';
+      qHint.innerHTML =
+        '<div class="fitb-meta">'
+        + '<span class="q-type">' + q.word.type + '</span>'
+        + '<span class="q-phonetic">' + q.word.phonetic + '</span>'
+        + '<span class="fitb-tries" id="fitbTries"></span>'
+        + '</div>'
+        + '<div style="font-size:13px;color:var(--muted);font-style:italic;margin-bottom:8px;">' + q.prompt + '</div>';
+    } else {
+      qLabel.textContent = q.type === 'typing' ? 'DEFINITION — Type the word' : 'WORD — Choose the definition';
+      wordDisp.innerHTML = '<div class="q-word">' + q.prompt + '</div><div class="q-type">' + q.word.type + '</div><div class="q-phonetic">' + q.word.phonetic + '</div>';
+      qHint.textContent  = q.word.example ? '"' + q.word.example + '"' : '';
+    }
   }
 
   // Show Vietnamese from CSV
@@ -1004,11 +1084,33 @@ function showQuestion() {
 
   var optCont = document.getElementById('optionsContainer');
   if (q.type === 'typing') {
-    optCont.innerHTML = '<div><input class="typing-input" id="typingInput" placeholder="Type your answer..." autocomplete="off" autocorrect="off" spellcheck="false"></div>'
-      + '<div class="btn-row" style="margin-top:12px;"><button class="btn btn-primary" onclick="checkTyping()">Check ✓</button><button class="btn-sm" onclick="skipQ()">Skip</button></div>';
+    var isFitb = q.promptType === 'fitb';
+    var wordLen = q.answer.length;
+    var placeholder = isFitb
+      ? 'Điền từ còn thiếu (' + wordLen + ' chữ cái)...'
+      : 'Type your answer...';
+    optCont.innerHTML =
+      '<div class="fitb-input-wrap">'
+      + '<input class="typing-input" id="typingInput" placeholder="' + placeholder + '" autocomplete="off" autocorrect="off" spellcheck="false">'
+      + (isFitb ? '<span class="char-count" id="charCount">0/' + wordLen + '</span>' : '')
+      + '</div>'
+      + '<div class="fitb-meta" style="margin-top:10px;">'
+      + (isFitb ? '<button class="hint-btn" id="hintBtn" onclick="revealHint()">💡 Gợi ý (+1 chữ)</button><span class="fitb-hint-text" id="hintText">' + q.answer[0].toUpperCase() + '...' + '</span>' : '')
+      + '</div>'
+      + '<div class="btn-row" style="margin-top:8px;"><button class="btn btn-primary" onclick="checkTyping()">Check ✓</button><button class="btn-sm" onclick="skipQ()">Skip</button></div>';
     setTimeout(function(){
       var el = document.getElementById('typingInput');
-      if (el) { el.focus(); el.addEventListener('keydown', function(e){ if(e.key==='Enter') checkTyping(); }); }
+      if (el) {
+        el.focus();
+        el.addEventListener('keydown', function(e){ if(e.key==='Enter') checkTyping(); });
+        if (isFitb) {
+          el.addEventListener('input', function(){
+            var cc = document.getElementById('charCount');
+            if (cc) cc.textContent = el.value.length + '/' + wordLen;
+            updateFitbBlank(el.value);
+          });
+        }
+      }
     }, 50);
   } else {
     var html = '<div class="options">';
@@ -1038,16 +1140,85 @@ function checkMC(btn) {
   document.getElementById('nextBtn').classList.remove('hidden');
 }
 
+var typingTries = 0;
+
+function updateFitbBlank(val) {
+  var blank = document.getElementById('fitbBlank');
+  if (!blank) return;
+  var q = questions[currentQ];
+  var wordLen = q.answer.length;
+  var display = '';
+  for (var i = 0; i < wordLen; i++) {
+    display += val[i] ? val[i] : '_';
+    if (i < wordLen - 1) display += ' ';
+  }
+  blank.textContent = display;
+}
+
+function revealHint() {
+  var q = questions[currentQ];
+  if (!q) return;
+  var btn = document.getElementById('hintBtn');
+  var hintText = document.getElementById('hintText');
+  var inp = document.getElementById('typingInput');
+  q.hintRevealed = (q.hintRevealed || 1) + 1;
+  var revealed = q.hintRevealed;
+  if (revealed >= q.answer.length) {
+    if (btn) btn.disabled = true;
+  }
+  // Build hint: show first N chars, rest as dots
+  var hint = '';
+  for (var i = 0; i < q.answer.length; i++) {
+    hint += i < revealed ? q.answer[i].toUpperCase() : '·';
+  }
+  if (hintText) hintText.textContent = hint;
+  // Pre-fill input with revealed chars
+  if (inp && !inp.disabled) {
+    inp.value = q.answer.substring(0, revealed);
+    updateFitbBlank(inp.value);
+    var cc = document.getElementById('charCount');
+    if (cc) cc.textContent = inp.value.length + '/' + q.answer.length;
+    inp.focus();
+  }
+}
+
 function checkTyping() {
   if (answered) return;
   var input = document.getElementById('typingInput');
   var val = input.value.trim().toLowerCase();
   var q = questions[currentQ];
-  answered = true; input.disabled = true;
+  if (!val) return;
   var correct = val === q.answer || isClose(val, q.answer);
-  if (correct) { score++; input.classList.add('correct'); }
-  else { input.classList.add('wrong'); wrongWords.push(q.word); }
-  showFeedback(correct, q);
+  if (correct) {
+    answered = true; input.disabled = true;
+    score++;
+    input.classList.add('correct');
+    // Show full word in blank
+    var blank = document.getElementById('fitbBlank');
+    if (blank) blank.textContent = q.answer;
+    if (typingTries === 0) {
+      showFeedback(true, q);
+    } else {
+      showFeedback(true, q, false, '✅ Chính xác sau ' + (typingTries+1) + ' lần thử!');
+    }
+  } else {
+    // Wrong: shake, clear, let retry
+    typingTries++;
+    input.classList.add('wrong');
+    input.classList.add('shake');
+    var tries = document.getElementById('fitbTries');
+    if (tries) tries.textContent = 'Thử lần ' + (typingTries+1);
+    setTimeout(function() {
+      input.classList.remove('wrong');
+      input.classList.remove('shake');
+      input.value = '';
+      updateFitbBlank('');
+      var cc = document.getElementById('charCount');
+      if (cc) cc.textContent = '0/' + q.answer.length;
+      input.focus();
+    }, 700);
+    return; // don't advance
+  }
   document.getElementById('scoreDisplay').textContent = score;
   document.getElementById('nextBtn').classList.remove('hidden');
 }
@@ -1060,13 +1231,15 @@ function skipQ() {
   document.getElementById('nextBtn').classList.remove('hidden');
 }
 
-function showFeedback(correct, q, skipped) {
+function showFeedback(correct, q, skipped, customMsg) {
   var fb = document.getElementById('feedback');
   fb.className = 'feedback show ' + (correct ? 'correct-fb' : 'wrong-fb');
-  var msg = correct ? '✅ <strong>Correct!</strong>'
+  var msg = customMsg ? customMsg
+    : (correct ? '✅ <strong>Correct!</strong>'
     : (skipped ? '⏭ <strong>Skipped.</strong> Answer: <strong>' + q.answer + '</strong>'
-               : '❌ <strong>Wrong!</strong> Answer: <strong>' + q.answer + '</strong>');
+               : '❌ <strong>Wrong!</strong> Answer: <strong>' + q.answer + '</strong>'));
   if (q.word && q.word.synonym) msg += '<br><span style="font-size:12px">Synonym: ' + q.word.synonym + '</span>';
+  if (q.word && q.word.vietnamese) msg += '<br><span style="font-size:12px;color:var(--accent2)">🇻🇳 ' + q.word.vietnamese + '</span>';
   fb.innerHTML = msg;
 }
 
