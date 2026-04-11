@@ -246,6 +246,33 @@ header {
 .fc-back .fc-hint { color: #888; }
 .fc-nav { display: flex; justify-content: center; align-items: center; gap: 20px; }
 .fc-counter { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }
+.fc-kb-hint { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); text-align: center; margin-top: 8px; letter-spacing: 0.5px; }
+.fc-kb-hint kbd {
+  display: inline-block; padding: 1px 6px; font-size: 10px;
+  border: 1px solid var(--border); border-radius: 4px;
+  background: var(--card); color: var(--muted);
+}
+/* FC type mode */
+.fc-type-wrap { margin-top: 14px; }
+.fc-type-input {
+  width: 100%; font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 18px; font-weight: 700;
+  padding: 12px 16px; border: 2px solid var(--border);
+  border-radius: 10px; outline: none; background: var(--card);
+  transition: border-color 0.2s; text-align: center;
+}
+.fc-type-input:focus { border-color: var(--accent); }
+.fc-type-input.correct { border-color: var(--correct); background: #d4edda; color: #155724; }
+.fc-type-input.wrong   { border-color: var(--wrong);   background: #f8d7da; color: #721c24; }
+.fc-mode-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
+.fc-mode-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  padding: 5px 12px; border: 1.5px solid var(--border);
+  border-radius: 6px; cursor: pointer; background: var(--card);
+  color: var(--muted); transition: all 0.15s; letter-spacing: 1px;
+}
+.fc-mode-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(232,93,47,0.08); }
+.fc-mode-btn:hover:not(.active) { border-color: var(--muted); color: var(--ink); }
 
 /* Speak button */
 .speak-btn {
@@ -482,7 +509,7 @@ header {
           <div class="q-phonetic" id="fcPhonetic"></div>
           <div class="q-type" id="fcType"></div>
           <div class="vi-wrap" id="fcViWrap"></div>
-          <div class="fc-hint">Click to flip</div>
+          <div class="fc-hint" id="fcFrontHint">Click / Space to flip</div>
         </div>
         <div class="fc-back">
           <div class="q-label" style="color:#e8a07f">DEFINITION</div>
@@ -493,11 +520,31 @@ header {
         </div>
       </div>
     </div>
+    <!-- FC mode toggle -->
+    <div class="fc-mode-toggle">
+      <button class="fc-mode-btn active" id="fcModeView" onclick="setFcMode('view')">👁 XEM</button>
+      <button class="fc-mode-btn" id="fcModeType" onclick="setFcMode('type')">⌨️ NHẬP TỪ</button>
+    </div>
+
     <div class="fc-nav">
       <button class="btn btn-outline" onclick="fcNav(-1)">← Prev</button>
       <span class="fc-counter" id="fcCounter">1 / 1</span>
       <button class="btn btn-primary" onclick="fcNav(1)">Next →</button>
     </div>
+
+    <!-- Type mode input (hidden by default) -->
+    <div class="fc-type-wrap hidden" id="fcTypeWrap">
+      <input class="fc-type-input" id="fcTypeInput"
+        placeholder="Nhập từ tiếng Anh rồi Enter..."
+        autocomplete="off" autocorrect="off" spellcheck="false">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);text-align:center;margin-top:6px;" id="fcTypeFeedback"></div>
+    </div>
+
+    <!-- Keyboard hint -->
+    <div class="fc-kb-hint" id="fcKbHint">
+      <kbd>Space</kbd> lật thẻ &nbsp;·&nbsp; <kbd>←</kbd><kbd>→</kbd> chuyển thẻ
+    </div>
+
     <!-- Voice picker -->
     <div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;">
       <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;white-space:nowrap;">🔊 Voice</span>
@@ -556,6 +603,8 @@ var wrongWords = [];
 var currentMode = '';
 var fcIndex = 0;
 var fcFlipped = false;
+var fcMode = 'view'; // 'view' or 'type'
+var fcTypeAnswered = false;
 
 // ══════════════════════════════════════
 // SCREEN
@@ -772,19 +821,127 @@ function showFlashcard() {
 }
 
 function flipCard() {
+  if (fcMode === 'type') return; // disable click-flip in type mode
   fcFlipped = !fcFlipped;
   document.getElementById('flashcard').classList.toggle('flipped', fcFlipped);
+}
+
+function setFcMode(mode) {
+  fcMode = mode;
+  document.getElementById('fcModeView').classList.toggle('active', mode === 'view');
+  document.getElementById('fcModeType').classList.toggle('active', mode === 'type');
+  var typeWrap = document.getElementById('fcTypeWrap');
+  var kbHint   = document.getElementById('fcKbHint');
+  var frontHint = document.getElementById('fcFrontHint');
+  if (mode === 'type') {
+    typeWrap.classList.remove('hidden');
+    kbHint.innerHTML = '<kbd>Enter</kbd> kiểm tra &nbsp;·&nbsp; <kbd>→</kbd> bỏ qua';
+    if (frontHint) frontHint.textContent = 'Nhập từ bên dưới';
+    // Show definition on front in type mode
+    resetFcTypeInput();
+  } else {
+    typeWrap.classList.add('hidden');
+    kbHint.innerHTML = '<kbd>Space</kbd> lật thẻ &nbsp;·&nbsp; <kbd>←</kbd><kbd>→</kbd> chuyển thẻ';
+    if (frontHint) frontHint.textContent = 'Click / Space to flip';
+    // Ensure card is unflipped
+    if (fcFlipped) {
+      document.getElementById('flashcard').classList.remove('flipped');
+      fcFlipped = false;
+    }
+  }
+}
+
+function resetFcTypeInput() {
+  fcTypeAnswered = false;
+  var inp = document.getElementById('fcTypeInput');
+  var fb  = document.getElementById('fcTypeFeedback');
+  if (inp) { inp.value = ''; inp.className = 'fc-type-input'; inp.disabled = false; inp.placeholder = 'Nhập từ tiếng Anh rồi Enter...'; }
+  if (fb)  { fb.textContent = ''; }
+  // Show definition on front card face for type mode
+  var item = questions[fcIndex];
+  if (item) {
+    document.getElementById('fcFrontHint').textContent = item.definition;
+    document.getElementById('fcFrontHint').style.cssText = 'font-size:13px;color:var(--muted);margin-top:10px;font-style:italic;max-width:90%;line-height:1.5;';
+  }
+  setTimeout(function(){ if(inp && !inp.disabled) inp.focus(); }, 100);
+}
+
+function checkFcType() {
+  if (fcTypeAnswered) { fcNav(1); return; }
+  var inp  = document.getElementById('fcTypeInput');
+  var fb   = document.getElementById('fcTypeFeedback');
+  var val  = inp.value.trim().toLowerCase();
+  var item = questions[fcIndex];
+  if (!val) return;
+  fcTypeAnswered = true;
+  inp.disabled = true;
+  var correct = val === item.word.toLowerCase() || isClose(val, item.word.toLowerCase());
+  if (correct) {
+    inp.classList.add('correct');
+    fb.innerHTML = '✅ Chính xác! <span style="opacity:0.6;font-size:10px;">Enter để tiếp tục</span>';
+    fb.style.color = 'var(--correct)';
+  } else {
+    inp.classList.add('wrong');
+    fb.innerHTML = '❌ Sai — đáp án: <strong>' + item.word + '</strong> &nbsp;<span style="opacity:0.6;font-size:10px;">Enter để tiếp tục</span>';
+    fb.style.color = 'var(--wrong)';
+  }
 }
 
 function fcNav(dir) {
   fcIndex = Math.max(0, Math.min(questions.length-1, fcIndex+dir));
   showFlashcard();
+  if (fcMode === 'type') resetFcTypeInput();
   if (fcIndex === questions.length-1 && dir === 1) {
     setTimeout(function(){
       if (confirm('Reviewed all cards! Go back to modes?')) showScreen('modeScreen');
     }, 300);
   }
 }
+
+// ── KEYBOARD SHORTCUTS ──
+document.addEventListener('keydown', function(e) {
+  var active = document.querySelector('#gameScreen');
+  if (!active || !active.classList.contains('active')) return;
+  var flashMode = !document.getElementById('flashcardMode').classList.contains('hidden');
+  if (!flashMode) return;
+
+  // Don't intercept when typing in inputs (except fc-type-input handled separately)
+  var tag = document.activeElement && document.activeElement.tagName;
+  if ((tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') &&
+      document.activeElement.id !== 'fcTypeInput') return;
+
+  if (fcMode === 'view') {
+    if (e.key === ' ' || e.code === 'Space') {
+      e.preventDefault();
+      fcFlipped = !fcFlipped;
+      document.getElementById('flashcard').classList.toggle('flipped', fcFlipped);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault(); fcNav(1);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault(); fcNav(-1);
+    }
+  } else if (fcMode === 'type') {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (!fcTypeAnswered) checkFcType();
+      else fcNav(1);
+    } else if (e.key === 'ArrowRight' && fcTypeAnswered) {
+      e.preventDefault(); fcNav(1);
+    } else if (e.key === 'Escape') {
+      e.preventDefault(); fcNav(1); // skip
+    }
+  }
+});
+
+// Wire up type input Enter key
+document.addEventListener('DOMContentLoaded', function() {
+  var inp = document.getElementById('fcTypeInput');
+  if (inp) {
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); if (!fcTypeAnswered) checkFcType(); else fcNav(1); }
+    });
+  }
+});
 
 // ── QUIZ ──
 function showQuestion() {
