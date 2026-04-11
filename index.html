@@ -350,6 +350,57 @@ header {
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
 .shake { animation: shake 0.3s ease; }
 
+/* ── VOCAB LIST ── */
+#vocabListScreen { max-width: 820px; margin: 32px auto; padding: 0 24px 60px; }
+.vl-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+.vl-header h1 { font-size:24px; font-weight:800; letter-spacing:-0.5px; }
+.vl-search {
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size:13px;
+  padding:8px 14px; border:1.5px solid var(--border); border-radius:8px;
+  background:var(--card); color:var(--ink); outline:none; width:220px;
+  transition:border-color 0.2s;
+}
+.vl-search:focus { border-color:var(--accent); }
+.vl-stats {
+  font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted);
+  margin-bottom:14px; display:flex; gap:16px; flex-wrap:wrap;
+}
+.vl-filter-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.vl-filter {
+  font-family:'JetBrains Mono',monospace; font-size:10px; padding:4px 12px;
+  border:1.5px solid var(--border); border-radius:20px; cursor:pointer;
+  background:var(--card); color:var(--muted); transition:all 0.15s; letter-spacing:0.5px;
+}
+.vl-filter:hover, .vl-filter.active { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.vl-table { width:100%; border-collapse:collapse; }
+.vl-table th {
+  font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--muted); padding:8px 12px;
+  text-align:left; border-bottom:2px solid var(--border);
+  position:sticky; top:0; background:var(--paper); z-index:2;
+  cursor:pointer; user-select:none; white-space:nowrap;
+}
+.vl-table th:hover { color:var(--ink); }
+.vl-table th.sorted { color:var(--accent); }
+.vl-table td { padding:10px 12px; border-bottom:1px solid var(--border); font-size:13.5px; vertical-align:top; line-height:1.5; }
+.vl-table tr:last-child td { border-bottom:none; }
+.vl-table tr:hover td { background:rgba(232,93,47,0.03); }
+.vl-word { font-weight:700; font-size:15px; color:var(--ink); }
+.vl-phonetic { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); }
+.vl-type-tag {
+  font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600;
+  padding:2px 7px; border-radius:4px; background:var(--ink); color:var(--paper);
+  letter-spacing:0.5px; white-space:nowrap;
+}
+.vl-vi { color:var(--accent2); font-size:13px; font-weight:600; }
+.vl-empty { text-align:center; padding:48px 24px; color:var(--muted); font-size:14px; }
+.vl-speak-btn {
+  background:none; border:none; cursor:pointer; font-size:14px;
+  padding:2px 4px; border-radius:4px; transition:background 0.15s; color:var(--muted);
+}
+.vl-speak-btn:hover { background:rgba(47,125,232,0.1); color:var(--accent2); }
+.sort-arrow { font-size:9px; margin-left:3px; }
+
 /* VI TRANSLATION */
 .vi-wrap { margin-top: 8px; min-height: 22px; }
 .vi-trans {
@@ -524,6 +575,37 @@ header {
   <div class="word-preview">
     <h3>Word list</h3>
     <div class="word-tags" id="wordTagsPreview"></div>
+  </div>
+</div>
+
+<!-- ── VOCAB LIST SCREEN ── -->
+<div id="vocabListScreen" class="screen">
+  <div class="vl-header">
+    <div>
+      <h1>📋 Danh sách từ vựng</h1>
+      <div class="vl-stats" id="vlStats"></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <input class="vl-search" id="vlSearch" placeholder="🔍 Tìm từ..." oninput="filterVocabList()">
+      <button class="btn-sm" onclick="showScreen('modeScreen')">← Quay lại</button>
+    </div>
+  </div>
+  <div class="vl-filter-row" id="vlFilters"></div>
+  <div style="overflow-x:auto;">
+    <table class="vl-table">
+      <thead>
+        <tr>
+          <th onclick="sortVocabList('word')" id="thWord">Từ <span class="sort-arrow" id="arWord">↕</span></th>
+          <th onclick="sortVocabList('type')" id="thType">Loại <span class="sort-arrow" id="arType">↕</span></th>
+          <th>Phiên âm</th>
+          <th onclick="sortVocabList('definition')" id="thDef">Định nghĩa <span class="sort-arrow" id="arDef">↕</span></th>
+          <th>Ví dụ</th>
+          <th>Tiếng Việt</th>
+        </tr>
+      </thead>
+      <tbody id="vlBody"></tbody>
+    </table>
+    <div class="vl-empty hidden" id="vlEmpty">Không tìm thấy từ nào.</div>
   </div>
 </div>
 
@@ -1355,6 +1437,139 @@ function speakWord(e) {
   if (!item) return;
   speak(fcFlipped ? item.definition : item.word, 0.85, 1);
 }
+
+// ══════════════════════════════════════
+// VOCAB LIST
+// ══════════════════════════════════════
+var vlSortKey = 'word';
+var vlSortAsc = true;
+var vlFilterType = 'all';
+
+function openVocabList() {
+  renderVocabList();
+  showScreen('vocabListScreen');
+}
+
+function renderVocabList() {
+  var types = {};
+  vocab.forEach(function(v){ types[v.type] = (types[v.type]||0)+1; });
+  var viCount = vocab.filter(function(v){ return v.vietnamese; }).length;
+  document.getElementById('vlStats').innerHTML =
+    '<span>' + vocab.length + ' từ</span>' +
+    '<span>' + viCount + ' có tiếng Việt</span>' +
+    '<span>' + Object.keys(types).length + ' loại từ</span>';
+
+  // Type filters - build using DOM to avoid quote escaping issues
+  var container = document.getElementById('vlFilters');
+  container.innerHTML = '';
+  var allBtn = document.createElement('button');
+  allBtn.className = 'vl-filter' + (vlFilterType === 'all' ? ' active' : '');
+  allBtn.textContent = 'Tất cả';
+  allBtn.onclick = function(){ setVlFilter('all'); };
+  container.appendChild(allBtn);
+  Object.keys(types).sort().forEach(function(t) {
+    if (!t) return;
+    var btn = document.createElement('button');
+    btn.className = 'vl-filter' + (vlFilterType === t ? ' active' : '');
+    btn.textContent = t + ' (' + types[t] + ')';
+    btn.onclick = function(){ setVlFilter(t); };
+    container.appendChild(btn);
+  });
+
+  filterVocabList();
+}
+
+
+function setVlFilter(type) {
+  vlFilterType = type;
+  document.querySelectorAll('.vl-filter').forEach(function(b){
+    b.classList.toggle('active', b.textContent.startsWith(type === 'all' ? 'Tất' : type));
+  });
+  filterVocabList();
+}
+
+function filterVocabList() {
+  var q = (document.getElementById('vlSearch').value || '').toLowerCase().trim();
+  var filtered = vocab.filter(function(v) {
+    var matchType = vlFilterType === 'all' || v.type === vlFilterType;
+    var matchQ = !q || v.word.toLowerCase().includes(q)
+      || v.definition.toLowerCase().includes(q)
+      || v.vietnamese.toLowerCase().includes(q)
+      || (v.example && v.example.toLowerCase().includes(q));
+    return matchType && matchQ;
+  });
+
+  // Sort
+  filtered.sort(function(a, b) {
+    var va = (a[vlSortKey]||'').toLowerCase();
+    var vb = (b[vlSortKey]||'').toLowerCase();
+    return vlSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+
+  renderVlTable(filtered, q);
+}
+
+function sortVocabList(key) {
+  if (vlSortKey === key) vlSortAsc = !vlSortAsc;
+  else { vlSortKey = key; vlSortAsc = true; }
+  // Update arrow indicators
+  ['word','type','definition'].forEach(function(k) {
+    var ar = document.getElementById('ar' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (ar) ar.textContent = k === vlSortKey ? (vlSortAsc ? '↑' : '↓') : '↕';
+    var th = document.getElementById('th' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (th) th.classList.toggle('sorted', k === vlSortKey);
+  });
+  filterVocabList();
+}
+
+function highlight(text, q) {
+  if (!q || !text) return text || '';
+  var re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+  return text.replace(re, '<mark style="background:rgba(232,93,47,0.2);border-radius:2px;padding:0 1px;">$1</mark>');
+}
+
+function renderVlTable(rows, q) {
+  var empty = document.getElementById('vlEmpty');
+  var body  = document.getElementById('vlBody');
+  if (!rows.length) {
+    body.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  body.innerHTML = '';
+  rows.forEach(function(v) {
+    var wordSafe = highlight(v.word, q);
+    var defSafe  = highlight(v.definition, q);
+    var viSafe   = highlight(v.vietnamese, q);
+    var exSafe   = v.example ? highlight(v.example, q) : '<span style="color:var(--border)">—</span>';
+    var synAnt = '';
+    if (v.synonym) synAnt += '<div style="font-size:11px;color:var(--accent3);margin-top:2px;">≈ ' + v.synonym + '</div>';
+    if (v.antonym) synAnt += '<div style="font-size:11px;color:var(--wrong);margin-top:1px;">≠ ' + v.antonym + '</div>';
+
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td style="white-space:nowrap;">'
+      + '<div style="display:flex;align-items:center;gap:6px;">'
+      + '<button class="vl-speak-btn" data-word="' + v.word + '" title="Phát âm">🔊</button>'
+      + '<div><div class="vl-word">' + wordSafe + '</div>'
+      + '<div class="vl-phonetic">' + (v.phonetic||'') + '</div></div>'
+      + '</div></td>'
+      + '<td><span class="vl-type-tag">' + (v.type||'') + '</span></td>'
+      + '<td><div>' + defSafe + '</div>' + synAnt + '</td>'
+      + '<td style="color:var(--muted);font-size:13px;">' + exSafe + '</td>'
+      + '<td class="vl-vi">' + (viSafe || '<span style="color:var(--border)">—</span>') + '</td>';
+    body.appendChild(tr);
+  });
+
+  // Attach speak button events
+  body.querySelectorAll('.vl-speak-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      speak(this.getAttribute('data-word'), 0.85, 1);
+    });
+  });
+}
+
 
 // ══════════════════════════════════════
 // IMPORT TAB SWITCHING
