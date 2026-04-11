@@ -835,7 +835,7 @@ function setFcMode(mode) {
   var frontHint = document.getElementById('fcFrontHint');
   if (mode === 'type') {
     typeWrap.classList.remove('hidden');
-    kbHint.innerHTML = '<kbd>Enter</kbd> kiểm tra &nbsp;·&nbsp; <kbd>→</kbd> bỏ qua';
+    kbHint.innerHTML = '<kbd>Enter</kbd> kiểm tra &nbsp;·&nbsp; <kbd>→</kbd> tiếp tục (khi đúng)';
     if (frontHint) frontHint.textContent = 'Nhập từ bên dưới';
     // Show definition on front in type mode
     resetFcTypeInput();
@@ -873,17 +873,24 @@ function checkFcType() {
   var val  = inp.value.trim().toLowerCase();
   var item = questions[fcIndex];
   if (!val) return;
-  fcTypeAnswered = true;
-  inp.disabled = true;
   var correct = val === item.word.toLowerCase() || isClose(val, item.word.toLowerCase());
   if (correct) {
+    fcTypeAnswered = true;
+    inp.disabled = true;
     inp.classList.add('correct');
-    fb.innerHTML = '✅ Chính xác! <span style="opacity:0.6;font-size:10px;">Enter để tiếp tục</span>';
+    fb.innerHTML = '✅ Chính xác! <span style="opacity:0.6;font-size:10px;">Enter để tiếp tục →</span>';
     fb.style.color = 'var(--correct)';
   } else {
+    // Wrong: shake, clear, let user retry
     inp.classList.add('wrong');
-    fb.innerHTML = '❌ Sai — đáp án: <strong>' + item.word + '</strong> &nbsp;<span style="opacity:0.6;font-size:10px;">Enter để tiếp tục</span>';
+    fb.innerHTML = '❌ Sai rồi, thử lại!';
     fb.style.color = 'var(--wrong)';
+    setTimeout(function() {
+      inp.classList.remove('wrong');
+      inp.value = '';
+      fb.textContent = '';
+      inp.focus();
+    }, 800);
   }
 }
 
@@ -927,9 +934,8 @@ document.addEventListener('keydown', function(e) {
       else fcNav(1);
     } else if (e.key === 'ArrowRight' && fcTypeAnswered) {
       e.preventDefault(); fcNav(1);
-    } else if (e.key === 'Escape') {
-      e.preventDefault(); fcNav(1); // skip
     }
+    // Escape removed — must answer correctly to proceed
   }
 });
 
@@ -938,7 +944,11 @@ document.addEventListener('DOMContentLoaded', function() {
   var inp = document.getElementById('fcTypeInput');
   if (inp) {
     inp.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') { e.preventDefault(); if (!fcTypeAnswered) checkFcType(); else fcNav(1); }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (!fcTypeAnswered) checkFcType();
+        else fcNav(1);
+      }
     });
   }
 });
