@@ -572,9 +572,12 @@ header {
       <span class="diff diff-hard">HARD</span>
     </div>
   </div>
-  <div class="word-preview">
-    <h3>Word list</h3>
-    <div class="word-tags" id="wordTagsPreview"></div>
+  <div class="word-preview" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div style="flex:1;min-width:0;">
+      <h3 style="margin-bottom:8px;">Word list</h3>
+      <div class="word-tags" id="wordTagsPreview"></div>
+    </div>
+    <button class="btn btn-outline" onclick="openVocabList()" style="font-size:13px;padding:10px 18px;white-space:nowrap;flex-shrink:0;">📋 Xem danh sách</button>
   </div>
 </div>
 
