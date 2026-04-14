@@ -378,13 +378,23 @@ header {
   text-transform:uppercase; color:var(--muted); padding:8px 12px;
   text-align:left; border-bottom:2px solid var(--border);
   position:sticky; top:0; background:var(--paper); z-index:2;
-  cursor:pointer; user-select:none; white-space:nowrap;
+  cursor:pointer; user-select:none; white-space:nowrap; overflow:hidden;
 }
 .vl-table th:hover { color:var(--ink); }
 .vl-table th.sorted { color:var(--accent); }
 .vl-table td { padding:10px 12px; border-bottom:1px solid var(--border); font-size:13.5px; vertical-align:top; line-height:1.5; }
 .vl-table tr:last-child td { border-bottom:none; }
 .vl-table tr:hover td { background:rgba(232,93,47,0.03); }
+/* Column widths — 5 cols: Từ | Loại | Định nghĩa | Ví dụ | Tiếng Việt */
+.vl-table th:nth-child(1), .vl-table td:nth-child(1) { width:180px; }
+.vl-table th:nth-child(2), .vl-table td:nth-child(2) { width:80px; }
+.vl-table th:nth-child(3), .vl-table td:nth-child(3) { width:260px; }
+.vl-table th:nth-child(4), .vl-table td:nth-child(4) { width:200px; }
+.vl-table th:nth-child(5), .vl-table td:nth-child(5) { width:150px; }
+@media (max-width: 700px) {
+  /* On mobile hide Example column, show on tap */
+  .vl-col-example { display:none; }
+}
 .vl-word { font-weight:700; font-size:15px; color:var(--ink); }
 .vl-phonetic { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); }
 .vl-type-tag {
@@ -594,15 +604,14 @@ header {
     </div>
   </div>
   <div class="vl-filter-row" id="vlFilters"></div>
-  <div style="overflow-x:auto;">
+  <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
     <table class="vl-table">
       <thead>
         <tr>
           <th onclick="sortVocabList('word')" id="thWord">Từ <span class="sort-arrow" id="arWord">↕</span></th>
           <th onclick="sortVocabList('type')" id="thType">Loại <span class="sort-arrow" id="arType">↕</span></th>
-          <th>Phiên âm</th>
           <th onclick="sortVocabList('definition')" id="thDef">Định nghĩa <span class="sort-arrow" id="arDef">↕</span></th>
-          <th>Ví dụ</th>
+          <th class="vl-col-example">Ví dụ</th>
           <th>Tiếng Việt</th>
         </tr>
       </thead>
@@ -1570,7 +1579,7 @@ function renderVlTable(rows, q) {
 
     var tr = document.createElement('tr');
     tr.innerHTML =
-      '<td style="white-space:nowrap;">'
+      '<td>'
       + '<div style="display:flex;align-items:center;gap:6px;">'
       + '<button class="vl-speak-btn" data-word="' + v.word + '" title="Phát âm">🔊</button>'
       + '<div><div class="vl-word">' + wordSafe + '</div>'
@@ -1578,7 +1587,7 @@ function renderVlTable(rows, q) {
       + '</div></td>'
       + '<td><span class="vl-type-tag">' + (v.type||'') + '</span></td>'
       + '<td><div>' + defSafe + '</div>' + synAnt + '</td>'
-      + '<td style="color:var(--muted);font-size:13px;">' + exSafe + '</td>'
+      + '<td class="vl-col-example" style="color:var(--muted);font-size:13px;">' + exSafe + '</td>'
       + '<td class="vl-vi">' + (viSafe || '<span style="color:var(--border)">—</span>') + '</td>';
     body.appendChild(tr);
   });
