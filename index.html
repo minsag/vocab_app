@@ -499,11 +499,11 @@ header {
     <!-- PASTE PANEL -->
     <div class="import-panel" id="panelPaste">
       <div class="format-hint">
-        <b>Paste tab-separated (copy từ Excel/Google Sheets):</b><br>
-        word [tab] type [tab] phonetic [tab] definition [tab] example [tab] synonym [tab] antonym [tab] vietnamese<br><br>
-        <b>Chỉ cần tối thiểu 2 cột: word [tab] definition</b><br>
-        crucial [tab] extremely important or necessary [tab] thiết yếu<br><br>
-        <b>Cũng hỗ trợ dấu | (pipe):</b><br>
+        <b>⚠️ Quan trọng: phải dùng TAB thật (không phải spaces)</b><br>
+        Tốt nhất: copy từ <b>Excel / Google Sheets</b> → paste vào đây<br><br>
+        <b>Hoặc copy từ file .tsv:</b><br>
+        word [TAB] type [TAB] phonetic [TAB] definition [TAB] example [TAB] synonym [TAB] antonym [TAB] vietnamese<br><br>
+        <b>Cũng hỗ trợ | (pipe):</b><br>
         crucial | adj | /kruːʤəl/ | extremely important | thiết yếu
       </div>
       <textarea id="pasteInput"
@@ -769,16 +769,34 @@ function loadCSV() {
 function parseCSV(text) {
   vocab = [];
   var lines = text.split("\n").map(function(l){ return l.trim(); }).filter(Boolean);
-  // Auto-detect delimiter: prefer tab, fallback to pipe, then comma
-  var sample = lines.slice(0, 3).join("\n");
-  var delim = sample.includes("\t") ? "\t"
-            : sample.includes("|")   ? "|"
+
+  // Smart delimiter detection: check each line individually
+  // Count tabs in first few data lines
+  var tabCount = 0;
+  for (var t = 0; t < Math.min(5, lines.length); t++) {
+    tabCount += (lines[t].match(/\t/g) || []).length;
+  }
+
+  // If tabs found, use tab. Else try pipe. Else comma.
+  var delim = tabCount >= 3 ? "\t"
+            : lines.slice(0,3).join("\n").includes("|") ? "|"
             : ",";
+
   for (var i = 0; i < lines.length; i++) {
-    var cols = lines[i].split(delim);
+    var line = lines[i];
+    var cols = line.split(delim);
+
+    // If tab delimiter expected but this line has no tabs (copy-paste artifact),
+    // try to re-split by multiple spaces as fallback for phonetic detection
+    if (delim === "\t" && cols.length < 3) {
+      // Try pipe fallback
+      if (line.includes("|")) cols = line.split("|");
+    }
+
     if (cols.length < 2) continue;
     var word = cols[0].trim().replace(/^["']|["']$/g, '');
     if (!word || word.toLowerCase() === 'vocabulary' || word.toLowerCase() === 'word') continue;
+
     vocab.push({
       word:       word,
       type:       (cols[1]||'').trim(),
