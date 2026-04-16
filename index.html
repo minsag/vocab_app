@@ -1587,11 +1587,13 @@ function openVocabList() {
 }
 
 function renderVocabList() {
+  var source = getActiveVocab();
   var types = {};
-  vocab.forEach(function(v){ types[v.type] = (types[v.type]||0)+1; });
-  var viCount = vocab.filter(function(v){ return v.vietnamese; }).length;
+  source.forEach(function(v){ types[v.type] = (types[v.type]||0)+1; });
+  var viCount = source.filter(function(v){ return v.vietnamese; }).length;
+  var weekLabel = activeWeek === 'all' ? 'Tất cả' : 'Tuần ' + activeWeek;
   document.getElementById('vlStats').innerHTML =
-    '<span>' + vocab.length + ' từ</span>' +
+    '<span>' + source.length + ' từ (' + weekLabel + ')</span>' +
     '<span>' + viCount + ' có tiếng Việt</span>' +
     '<span>' + Object.keys(types).length + ' loại từ</span>';
 
@@ -1626,7 +1628,7 @@ function setVlFilter(type) {
 
 function filterVocabList() {
   var q = (document.getElementById('vlSearch').value || '').toLowerCase().trim();
-  var filtered = vocab.filter(function(v) {
+  var filtered = getActiveVocab().filter(function(v) {
     var matchType = vlFilterType === 'all' || v.type === vlFilterType;
     var matchQ = !q || v.word.toLowerCase().includes(q)
       || v.definition.toLowerCase().includes(q)
