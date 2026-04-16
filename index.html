@@ -345,6 +345,31 @@ header {
 .chip-correct { background: #d4edda; color: #155724; }
 .chip-wrong   { background: #f8d7da; color: #721c24; }
 
+/* Week filter */
+.week-bar {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 16px 20px; margin-bottom: 20px;
+}
+.week-bar-title {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+  margin-bottom: 12px;
+}
+.week-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.week-chip {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
+  padding: 6px 16px; border: 2px solid var(--border); border-radius: 20px;
+  cursor: pointer; background: var(--card); color: var(--muted);
+  transition: all 0.15s;
+}
+.week-chip:hover { border-color: var(--ink); color: var(--ink); }
+.week-chip.active {
+  background: var(--ink); color: var(--paper); border-color: var(--ink);
+  box-shadow: 2px 2px 0 var(--accent);
+}
+.week-chip.all-chip.active { background: var(--accent); border-color: var(--accent); box-shadow: 2px 2px 0 var(--ink); }
+.week-count { font-size: 10px; opacity: 0.7; margin-left: 4px; }
+
 @keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
 .animate-in { animation: slideUp 0.3s ease forwards; }
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
@@ -385,12 +410,13 @@ header {
 .vl-table td { padding:10px 12px; border-bottom:1px solid var(--border); font-size:13.5px; vertical-align:top; line-height:1.5; }
 .vl-table tr:last-child td { border-bottom:none; }
 .vl-table tr:hover td { background:rgba(232,93,47,0.03); }
-/* Column widths — 5 cols: Từ | Loại | Định nghĩa | Ví dụ | Tiếng Việt */
-.vl-table th:nth-child(1), .vl-table td:nth-child(1) { width:180px; }
-.vl-table th:nth-child(2), .vl-table td:nth-child(2) { width:80px; }
-.vl-table th:nth-child(3), .vl-table td:nth-child(3) { width:260px; }
-.vl-table th:nth-child(4), .vl-table td:nth-child(4) { width:200px; }
-.vl-table th:nth-child(5), .vl-table td:nth-child(5) { width:150px; }
+/* Column widths — 6 cols: Từ | Tuần | Loại | Định nghĩa | Ví dụ | Tiếng Việt */
+.vl-table th:nth-child(1), .vl-table td:nth-child(1) { width:170px; }
+.vl-table th:nth-child(2), .vl-table td:nth-child(2) { width:60px;  text-align:center; }
+.vl-table th:nth-child(3), .vl-table td:nth-child(3) { width:75px;  }
+.vl-table th:nth-child(4), .vl-table td:nth-child(4) { width:250px; }
+.vl-table th:nth-child(5), .vl-table td:nth-child(5) { width:190px; }
+.vl-table th:nth-child(6), .vl-table td:nth-child(6) { width:140px; }
 @media (max-width: 700px) {
   /* On mobile hide Example column, show on tap */
   .vl-col-example { display:none; }
@@ -545,6 +571,12 @@ header {
       <span class="trans-progress" id="transProgress"></span>
     </div>
   </div>
+  <!-- Week filter bar -->
+  <div class="week-bar hidden" id="weekBar">
+    <div class="week-bar-title">📅 Chọn tuần để học</div>
+    <div class="week-chips" id="weekChips"></div>
+  </div>
+
   <div class="mode-grid">
     <div class="mode-card" onclick="startGame('flashcard')">
       <div class="icon">🃏</div><h3>Flash Cards</h3>
@@ -609,6 +641,7 @@ header {
       <thead>
         <tr>
           <th onclick="sortVocabList('word')" id="thWord">Từ <span class="sort-arrow" id="arWord">↕</span></th>
+          <th onclick="sortVocabList('week')" id="thWeek">Tuần <span class="sort-arrow" id="arWeek">↕</span></th>
           <th onclick="sortVocabList('type')" id="thType">Loại <span class="sort-arrow" id="arType">↕</span></th>
           <th onclick="sortVocabList('definition')" id="thDef">Định nghĩa <span class="sort-arrow" id="arDef">↕</span></th>
           <th class="vl-col-example">Ví dụ</th>
@@ -806,15 +839,24 @@ function parseCSV(text) {
     var word = cols[0].trim().replace(/^["']|["']$/g, '');
     if (!word || word.toLowerCase() === 'vocabulary' || word.toLowerCase() === 'word') continue;
 
+    // Support both old format (8 cols) and new format with Week (9 cols)
+    var hasWeek = cols.length >= 9 || (cols.length === 9);
+    // Detect: if col[1] is a number or empty and col[2] looks like a type (adj/noun/verb...)
+    var types = ['adj','noun','verb','adv','prep','phrase','noun phrase','adj phrase'];
+    var col1isWeek = cols[1] !== undefined && (cols[1].trim() === '' || /^\d+$/.test(cols[1].trim()));
+    var col1isType = types.indexOf((cols[1]||'').trim().toLowerCase()) >= 0;
+    var weekOffset = (!col1isType && col1isWeek) ? 1 : 0;
+
     vocab.push({
       word:       word,
-      type:       (cols[1]||'').trim(),
-      phonetic:   (cols[2]||'').trim(),
-      definition: (cols[3]||'').trim(),
-      example:    (cols[4]||'').trim(),
-      synonym:    (cols[5]||'').trim(),
-      antonym:    (cols[6]||'').trim(),
-      vietnamese: (cols[7]||'').trim()
+      week:       weekOffset ? (cols[1]||'').trim() : '',
+      type:       (cols[1 + weekOffset]||'').trim(),
+      phonetic:   (cols[2 + weekOffset]||'').trim(),
+      definition: (cols[3 + weekOffset]||'').trim(),
+      example:    (cols[4 + weekOffset]||'').trim(),
+      synonym:    (cols[5 + weekOffset]||'').trim(),
+      antonym:    (cols[6 + weekOffset]||'').trim(),
+      vietnamese: (cols[7 + weekOffset]||'').trim()
     });
   }
   if (vocab.length < 2) {
@@ -847,9 +889,13 @@ function loadFromFilePicker(input) {
   reader.readAsText(file);
 }
 
+var activeWeek = 'all'; // 'all' or week number string
+
 function goToMode() {
-  document.getElementById('modeLabel').textContent = vocab.length + ' words loaded — choose a mode.';
-  document.getElementById('wordTagsPreview').innerHTML = vocab.map(function(v){
+  activeWeek = 'all';
+  buildWeekFilter();
+  updateModeLabel();
+  document.getElementById('wordTagsPreview').innerHTML = getActiveVocab().map(function(v){
     return '<span class="word-tag">' + v.word + '</span>';
   }).join('');
   // Auto-show VI modes if CSV has Vietnamese column
@@ -860,6 +906,65 @@ function goToMode() {
     document.getElementById('transProgress').textContent = '🇻🇳 ' + viCount + ' từ có tiếng Việt';
   }
   showScreen('modeScreen');
+}
+
+function getActiveVocab() {
+  if (activeWeek === 'all') return vocab;
+  return vocab.filter(function(v){ return v.week === activeWeek; });
+}
+
+function buildWeekFilter() {
+  var weeks = {};
+  vocab.forEach(function(v){
+    var w = v.week && v.week.trim();
+    if (w) weeks[w] = (weeks[w]||0) + 1;
+  });
+  var weekKeys = Object.keys(weeks).sort(function(a,b){
+    return parseInt(a)||0 - parseInt(b)||0;
+  });
+  var bar = document.getElementById('weekBar');
+  var chips = document.getElementById('weekChips');
+  if (!weekKeys.length) { bar.classList.add('hidden'); return; }
+  bar.classList.remove('hidden');
+  chips.innerHTML = '';
+
+  // All chip
+  var allBtn = document.createElement('button');
+  allBtn.className = 'week-chip all-chip' + (activeWeek==='all' ? ' active' : '');
+  allBtn.innerHTML = 'Tất cả <span class="week-count">(' + vocab.length + ')</span>';
+  allBtn.onclick = function(){ setWeek('all'); };
+  chips.appendChild(allBtn);
+
+  weekKeys.forEach(function(w){
+    var btn = document.createElement('button');
+    btn.className = 'week-chip' + (activeWeek===w ? ' active' : '');
+    btn.innerHTML = 'Tuần ' + w + ' <span class="week-count">(' + weeks[w] + ')</span>';
+    btn.onclick = function(){ setWeek(w); };
+    chips.appendChild(btn);
+  });
+}
+
+function setWeek(w) {
+  activeWeek = w;
+  // Update chips
+  document.querySelectorAll('.week-chip').forEach(function(btn){
+    btn.classList.remove('active');
+    var isAll = btn.classList.contains('all-chip');
+    if (w === 'all' && isAll) btn.classList.add('active');
+    if (w !== 'all' && btn.textContent.includes('Tuần ' + w)) btn.classList.add('active');
+  });
+  updateModeLabel();
+  document.getElementById('wordTagsPreview').innerHTML = getActiveVocab().map(function(v){
+    return '<span class="word-tag">' + v.word + '</span>';
+  }).join('');
+}
+
+function updateModeLabel() {
+  var active = getActiveVocab();
+  var label = active.length + ' từ';
+  if (activeWeek !== 'all') label += ' — Tuần ' + activeWeek;
+  label += ' — chọn chế độ học';
+  document.getElementById('modeLabel').textContent = label;
 }
 
 // Auto-load on page start
@@ -942,7 +1047,8 @@ function startGame(mode) {
   score = 0; currentQ = 0; answered = false; wrongWords = [];
   fcIndex = 0; fcFlipped = false;
 
-  var pool = shuffle(vocab.slice());
+  var pool = shuffle(getActiveVocab().slice());
+  if (pool.length < 2) { alert('Tuần này không đủ từ để học. Chọn tuần khác hoặc Tất cả.'); return; }
 
   if (mode === 'flashcard') {
     questions = pool;
@@ -1543,7 +1649,7 @@ function sortVocabList(key) {
   if (vlSortKey === key) vlSortAsc = !vlSortAsc;
   else { vlSortKey = key; vlSortAsc = true; }
   // Update arrow indicators
-  ['word','type','definition'].forEach(function(k) {
+  ['word','week','type','definition'].forEach(function(k) {
     var ar = document.getElementById('ar' + k.charAt(0).toUpperCase() + k.slice(1));
     if (ar) ar.textContent = k === vlSortKey ? (vlSortAsc ? '↑' : '↓') : '↕';
     var th = document.getElementById('th' + k.charAt(0).toUpperCase() + k.slice(1));
@@ -1561,11 +1667,7 @@ function highlight(text, q) {
 function renderVlTable(rows, q) {
   var empty = document.getElementById('vlEmpty');
   var body  = document.getElementById('vlBody');
-  if (!rows.length) {
-    body.innerHTML = '';
-    empty.classList.remove('hidden');
-    return;
-  }
+  if (!rows.length) { body.innerHTML = ''; empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
   body.innerHTML = '';
   rows.forEach(function(v) {
@@ -1577,6 +1679,10 @@ function renderVlTable(rows, q) {
     if (v.synonym) synAnt += '<div style="font-size:11px;color:var(--accent3);margin-top:2px;">≈ ' + v.synonym + '</div>';
     if (v.antonym) synAnt += '<div style="font-size:11px;color:var(--wrong);margin-top:1px;">≠ ' + v.antonym + '</div>';
 
+    var weekHtml = v.week
+      ? '<span style="font-family:JetBrains Mono,monospace;font-size:11px;font-weight:700;color:var(--accent2)">W' + v.week + '</span>'
+      : '<span style="color:var(--border)">—</span>';
+
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td>'
@@ -1585,21 +1691,17 @@ function renderVlTable(rows, q) {
       + '<div><div class="vl-word">' + wordSafe + '</div>'
       + '<div class="vl-phonetic">' + (v.phonetic||'') + '</div></div>'
       + '</div></td>'
+      + '<td style="text-align:center;">' + weekHtml + '</td>'
       + '<td><span class="vl-type-tag">' + (v.type||'') + '</span></td>'
       + '<td><div>' + defSafe + '</div>' + synAnt + '</td>'
       + '<td class="vl-col-example" style="color:var(--muted);font-size:13px;">' + exSafe + '</td>'
       + '<td class="vl-vi">' + (viSafe || '<span style="color:var(--border)">—</span>') + '</td>';
     body.appendChild(tr);
   });
-
-  // Attach speak button events
   body.querySelectorAll('.vl-speak-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      speak(this.getAttribute('data-word'), 0.85, 1);
-    });
+    btn.addEventListener('click', function() { speak(this.getAttribute('data-word'), 0.85, 1); });
   });
 }
-
 
 // ══════════════════════════════════════
 // IMPORT TAB SWITCHING
@@ -1708,7 +1810,7 @@ function handleViBtn(btn) {
 }
 
 function checkViReady() {
-  var ready = vocab.filter(function(v){ return v.vietnamese; });
+  var ready = getActiveVocab().filter(function(v){ return v.vietnamese; });
   if (ready.length === 0) {
     document.getElementById('transProgress').textContent = '⚠️ CSV chưa có cột Vietnamese';
     return;
