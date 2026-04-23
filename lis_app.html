@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ListenSharp — English Listening Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f12;
+    --bg2: #13161b;
+    --bg3: #1a1e26;
+    --border: #252b36;
+    --border2: #2e3545;
+    --accent: #4fffb0;
+    --accent2: #3de8a0;
+    --accent-dim: rgba(79,255,176,0.12);
+    --accent-glow: rgba(79,255,176,0.25);
+    --text: #e8edf5;
+    --text2: #8b95a8;
+    --text3: #505a6e;
+    --hard: #ff5c6a;
+    --hard-dim: rgba(255,92,106,0.15);
+    --ok: #ffc554;
+    --ok-dim: rgba(255,197,84,0.15);
+    --easy: #4fffb0;
+    --easy-dim: rgba(79,255,176,0.12);
+    --radius: 10px;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── LAYOUT ─────────────────────────────────────────────── */
+  #app {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-height: 100vh;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--accent); }
+
+  .url-bar {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+    max-width: 560px;
+    margin: 0 28px;
+  }
+
+  .url-bar input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .url-bar input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  .url-bar input::placeholder { color: var(--text3); }
+
+  .btn-load {
+    background: var(--accent);
+    color: #0d0f12;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 20px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, transform .1s;
+  }
+  .btn-load:hover { background: var(--accent2); }
+  .btn-load:active { transform: scale(0.97); }
+  .btn-load:disabled { opacity: .4; cursor: not-allowed; }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .shuffle-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text2);
+    cursor: pointer;
+    user-select: none;
+    font-family: var(--font-body);
+  }
+  .shuffle-toggle input[type="checkbox"] { display: none; }
+  .toggle-track {
+    width: 36px; height: 20px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    position: relative;
+    transition: background .2s, border-color .2s;
+  }
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    left: 3px; top: 3px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--text3);
+    transition: transform .2s, background .2s;
+  }
+  .shuffle-toggle input:checked + .toggle-track {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+  }
+  .shuffle-toggle input:checked + .toggle-track::after {
+    transform: translateX(16px);
+    background: var(--accent);
+  }
+
+  /* ── MAIN ────────────────────────────────────────────────── */
+  main {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 0;
+    height: calc(100vh - 61px);
+    overflow: hidden;
+  }
+
+  .practice-area {
+    display: flex;
+    flex-direction: column;
+    padding: 28px 32px;
+    gap: 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* ── PLAYER ──────────────────────────────────────────────── */
+  .player-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+  }
+  .player-wrap iframe {
+    display: block;
+    width: 100%;
+    height: 200px;
+    border: none;
+  }
+  .player-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(13,15,18,.95) 0%, rgba(13,15,18,.0) 40%);
+    pointer-events: none;
+  }
+
+  /* ── SENTENCE DISPLAY ────────────────────────────────────── */
+  .sentence-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    min-height: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .3s;
+  }
+  .sentence-card.revealed {
+    border-color: var(--accent-dim);
+  }
+
+  .sentence-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--text3);
+  }
+  .q-mark {
+    font-family: var(--font-display);
+    font-size: 64px;
+    font-weight: 800;
+    color: var(--border2);
+    line-height: 1;
+    transition: opacity .3s;
+  }
+  .placeholder-hint {
+    font-size: 13px;
+    letter-spacing: .04em;
+  }
+
+  .sentence-text {
+    font-family: var(--font-body);
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1.6;
+    color: var(--text);
+    display: none;
+  }
+  .sentence-card.revealed .sentence-placeholder { display: none; }
+  .sentence-card.revealed .sentence-text { display: block; }
+
+  .word {
+    display: inline;
+    transition: background .2s;
+  }
+  .word.b2 {
+    background: rgba(255,197,84,0.18);
+    border-bottom: 1.5px solid var(--ok);
+    border-radius: 2px;
+    padding: 0 1px;
+    cursor: help;
+    position: relative;
+  }
+  .word.c1 {
+    background: rgba(255,92,106,0.15);
+    border-bottom: 1.5px solid var(--hard);
+    border-radius: 2px;
+    cursor: help;
+    padding: 0 1px;
+  }
+
+  .vocab-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--font-mono);
+    margin-top: 8px;
+    align-self: flex-end;
+  }
+  .vocab-legend span { display: flex; align-items: center; gap: 4px; }
+  .dot { width: 8px; height: 8px; border-radius: 2px; }
+  .dot.b2 { background: var(--ok); }
+  .dot.c1 { background: var(--hard); }
+
+  /* ── RATING ──────────────────────────────────────────────── */
+  .rating-bar {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  .btn-rate {
+    flex: 1;
+    max-width: 100px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    letter-spacing: .04em;
+  }
+  .btn-rate.hard { color: var(--hard); }
+  .btn-rate.hard:hover, .btn-rate.hard.active { background: var(--hard-dim); border-color: var(--hard); }
+  .btn-rate.ok { color: var(--ok); }
+  .btn-rate.ok:hover, .btn-rate.ok.active { background: var(--ok-dim); border-color: var(--ok); }
+  .btn-rate.easy { color: var(--easy); }
+  .btn-rate.easy:hover, .btn-rate.easy.active { background: var(--easy-dim); border-color: var(--easy); }
+
+  /* ── CONTROLS ────────────────────────────────────────────── */
+  .controls-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn-ctrl:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .btn-ctrl:active { transform: scale(0.97); }
+  .btn-ctrl:disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
+  .btn-ctrl.primary { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+  .speed-selector {
+    display: flex;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-left: auto;
+  }
+  .speed-btn {
+    padding: 8px 11px;
+    background: transparent;
+    border: none;
+    color: var(--text2);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    border-right: 1px solid var(--border);
+  }
+  .speed-btn:last-child { border-right: none; }
+  .speed-btn.active { background: var(--accent-dim); color: var(--accent); }
+  .speed-btn:hover:not(.active) { background: var(--bg2); color: var(--text); }
+
+  /* ── PROGRESS ────────────────────────────────────────────── */
+  .progress-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text3);
+  }
+  .progress-label strong {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .progress-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .progress-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 0 3px var(--accent-dim);
+    transition: box-shadow .2s;
+  }
+  .progress-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 0 5px var(--accent-glow);
+  }
+
+  /* ── SPLASH ──────────────────────────────────────────────── */
+  .splash {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 16px;
+    color: var(--text3);
+    text-align: center;
+    padding: 40px;
+  }
+  .splash-icon {
+    font-size: 52px;
+    opacity: .4;
+  }
+  .splash h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text2);
+  }
+  .splash p { font-size: 14px; max-width: 360px; line-height: 1.7; }
+
+  .loading-msg {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text2);
+    padding: 14px 20px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--hard);
+    padding: 14px 20px;
+    background: var(--hard-dim);
+    border: 1px solid rgba(255,92,106,.3);
+    border-radius: 8px;
+    line-height: 1.5;
+  }
+  .error-msg .err-icon { font-size: 18px; flex-shrink: 0; }
+
+  /* ── SIDEBAR ─────────────────────────────────────────────── */
+  .sidebar {
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg2);
+  }
+
+  .sidebar-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .sidebar-title {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  .filter-pills {
+    display: flex;
+    gap: 5px;
+  }
+  .pill {
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    background: transparent;
+    transition: all .15s;
+  }
+  .pill.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .pill.hard-pill { color: var(--hard); border-color: var(--hard-dim); }
+  .pill.hard-pill.active { background: var(--hard-dim); border-color: var(--hard); }
+
+  .sentence-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+  .sentence-list::-webkit-scrollbar { width: 4px; }
+  .sentence-list::-webkit-scrollbar-track { background: transparent; }
+  .sentence-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .sentence-item {
+    padding: 10px 18px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background .15s, border-color .15s;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sentence-item:hover { background: var(--bg3); }
+  .sentence-item.active {
+    background: var(--accent-dim);
+    border-left-color: var(--accent);
+  }
+  .sentence-item.hidden-item { display: none; }
+
+  .item-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .item-text {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .item-rating {
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+  }
+  .item-rating.hard { background: var(--hard-dim); color: var(--hard); }
+  .item-rating.ok { background: var(--ok-dim); color: var(--ok); }
+  .item-rating.easy { background: var(--easy-dim); color: var(--easy); }
+
+  .sidebar-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text3);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.7;
+  }
+
+  /* ── LOADING OVERLAY ─────────────────────────────────────── */
+  #load-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13,15,18,.88);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 200;
+    backdrop-filter: blur(4px);
+    display: none;
+  }
+  #load-overlay.visible { display: flex; }
+  #load-overlay .big-spinner {
+    width: 44px; height: 44px;
+    border: 3px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  #load-overlay p {
+    font-family: var(--font-display);
+    font-size: 15px;
+    color: var(--text2);
+  }
+
+  /* ── MISC ────────────────────────────────────────────────── */
+  .practice-main { display: none; flex-direction: column; gap: 20px; }
+  .practice-main.visible { display: flex; }
+  #splash-view { display: flex; flex-direction: column; gap: 16px; }
+  #splash-view.hidden { display: none; }
+
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    header { flex-wrap: wrap; gap: 10px; }
+    .url-bar { order: 3; max-width: 100%; margin: 0; flex: 0 0 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div class="logo">Listen<span>Sharp</span></div>
+    <div class="url-bar">
+      <input type="text" id="url-input" placeholder="Paste YouTube URL here…" autocomplete="off" />
+      <button class="btn-load" id="btn-load">Load</button>
+    </div>
+    <div class="header-right">
+      <label class="shuffle-toggle">
+        <input type="checkbox" id="shuffle-toggle">
+        <span class="toggle-track"></span>
+        Shuffle
+      </label>
+    </div>
+  </header>
+
+  <main>
+    <div class="practice-area">
+
+      <!-- Splash -->
+      <div id="splash-view">
+        <div class="splash">
+          <div class="splash-icon">🎧</div>
+          <h2>Sentence-by-sentence listening drill</h2>
+          <p>Paste any YouTube URL above to begin. The video's subtitles will be split into individual sentences. Listen, guess, then reveal.</p>
+        </div>
+      </div>
+
+      <!-- Practice UI -->
+      <div class="practice-main" id="practice-main">
+        <div class="player-wrap">
+          <div id="yt-player"></div>
+          <div class="player-overlay"></div>
+        </div>
+
+        <div class="sentence-card" id="sentence-card">
+          <div class="sentence-placeholder">
+            <div class="q-mark">?</div>
+            <div class="placeholder-hint">Listen and try to understand…</div>
+          </div>
+          <div class="sentence-text" id="sentence-text"></div>
+        </div>
+
+        <div class="vocab-legend" id="vocab-legend" style="display:none">
+          <span><span class="dot b2"></span>B2 vocab</span>
+          <span><span class="dot c1"></span>C1 vocab</span>
+        </div>
+
+        <div class="rating-bar">
+          <button class="btn-rate hard" data-rating="hard">😓 Hard</button>
+          <button class="btn-rate ok" data-rating="ok">🤔 OK</button>
+          <button class="btn-rate easy" data-rating="easy">😊 Easy</button>
+        </div>
+
+        <div class="controls-row">
+          <button class="btn-ctrl primary" id="btn-replay">▶ Replay</button>
+          <button class="btn-ctrl" id="btn-show">👁 Show</button>
+          <button class="btn-ctrl" id="btn-next">→ Next</button>
+          <div class="speed-selector">
+            <button class="speed-btn" data-speed="0.5">0.5×</button>
+            <button class="speed-btn" data-speed="0.75">0.75×</button>
+            <button class="speed-btn active" data-speed="1">1×</button>
+            <button class="speed-btn" data-speed="1.25">1.25×</button>
+          </div>
+        </div>
+
+        <div class="progress-section">
+          <div class="progress-label">
+            <span id="progress-text">Sentence <strong>1</strong> / <strong>1</strong></span>
+            <span id="rating-display"></span>
+          </div>
+          <input type="range" class="progress-slider" id="progress-slider" min="0" value="0" step="1">
+        </div>
+      </div>
+
+      <div id="status-area"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Sentences</span>
+        <div class="filter-pills">
+          <button class="pill active" data-filter="all">All</button>
+          <button class="pill hard-pill" data-filter="hard">Hard</button>
+          <button class="pill" data-filter="ok">OK</button>
+          <button class="pill" data-filter="easy">Easy</button>
+        </div>
+      </div>
+      <div class="sentence-list" id="sentence-list">
+        <div class="sidebar-empty">Load a video to<br>see sentences here.</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="load-overlay">
+  <div class="big-spinner"></div>
+  <p id="overlay-msg">Fetching transcript…</p>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// B2/C1 VOCABULARY WORD LISTS (curated subset)
+// ─────────────────────────────────────────────────────────────
+const B2_WORDS = new Set([
+  'acknowledge','acquire','adequate','adjacent','advocate','albeit','allocate','ambiguous',
+  'anticipate','appreciate','appropriate','approximate','arbitrary','assess','assume',
+  'attribute','available','benefit','category','circumstance','clarify','complement',
+  'comprehensive','concentrate','conclude','confirm','conflict','consent','considerable',
+  'consistent','constraint','contribute','controversial','convince','crucial','demonstrate',
+  'derive','despite','determine','develop','diminish','diverse','eliminate','emerge',
+  'emphasize','enhance','establish','evaluate','evident','exception','exclude','explicit',
+  'extent','facilitate','focus','furthermore','generate','genuine','guarantee','identify',
+  'implement','implication','implicit','indicate','inevitable','influential','interpret',
+  'investigate','justify','maintain','manipulate','moreover','motivate','numerous',
+  'obtain','obvious','parallel','participate','perceive','perspective','potential',
+  'precisely','predominant','previous','primary','prior','professional','profound',
+  'prohibit','promote','propose','pursue','relevant','require','resolve','restrict',
+  'retain','reveal','significant','straightforward','subsequent','sufficient','suggest',
+  'summarize','supplement','sustain','whereas','widespread'
+]);
+
+const C1_WORDS = new Set([
+  'aberration','abstain','accentuate','alleviate','ambivalent','ameliorate','anachronism',
+  'analogous','anomalous','articulate','ascertain','astute','atrophy','augment',
+  'autonomous','benevolent','candid','circumvent','coherent','complacent','compelling',
+  'concede','conducive','contentious','contradict','convoluted','corroborate','culminate',
+  'daunting','debilitate','delineate','denounce','deplete','detrimental','devoid',
+  'dichotomy','discrepancy','disproportionate','disseminate','divergent','dubious',
+  'emulate','encompass','endemic','erode','exacerbate','exemplify','exhaustive',
+  'exorbitant','expedite','facade','fallacious','formidable','fragmentary','frugal',
+  'grandiose','gratuitous','grievous','groundbreaking','hamper','hinder','hypothetical',
+  'imminent','impede','inadvertent','incongruent','indispensable','infer','inherent',
+  'innate','instigate','intricately','intuitive','irrevocable','lucid','meticulous',
+  'mitigation','multifaceted','negligible','negate','nuanced','obsolete','ostensibly',
+  'paradox','paramount','pervasive','plausible','pragmatic','preclude','predominance',
+  'proliferate','pronounced','provoke','reconcile','rhetoric','rigorous','scrutinize',
+  'serendipitous','skeptical','sporadic','stringent','subordinate','succinct','superfluous',
+  'tenacious','theoretical','ubiquitous','undermining','unprecedented','validate','vehement'
+]);
+
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+let state = {
+  videoId: null,
+  sentences: [],       // [{text, start, end}]
+  order: [],           // indices into sentences (allows shuffle)
+  currentIdx: 0,       // index into order[]
+  ratings: {},         // sentenceIdx -> 'hard'|'ok'|'easy'
+  revealed: false,
+  speed: 1,
+  shuffle: false,
+  filterMode: 'all',
+  player: null,
+  playerReady: false,
+  segmentTimer: null,
+};
+
+const RATINGS_KEY = 'listensharp_ratings';
+
+function loadRatings(videoId) {
+  try {
+    const all = JSON.parse(localStorage.getItem(RATINGS_KEY) || '{}');
+    return all[videoId] || {};
+  } catch { return {}; }
+}
+function saveRatings() {
+  try {
+    const all = JSON.parse(localStorage.getItem(RATINGS_KEY) || '{}');
+    all[state.videoId] = state.ratings;
+    localStorage.setItem(RATINGS_KEY, JSON.stringify(all));
+  } catch {}
+}
+
+// ─────────────────────────────────────────────────────────────
+// YOUTUBE IFRAME API
+// ─────────────────────────────────────────────────────────────
+window.onYouTubeIframeAPIReady = function() {
+  state.ytAPIReady = true;
+};
+
+function loadYTScript() {
+  if (document.getElementById('yt-script')) return;
+  const s = document.createElement('script');
+  s.id = 'yt-script';
+  s.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(s);
+}
+loadYTScript();
+
+function createPlayer(videoId) {
+  return new Promise((resolve) => {
+    const tryCreate = () => {
+      if (!window.YT || !window.YT.Player) { setTimeout(tryCreate, 100); return; }
+      if (state.player) {
+        try { state.player.destroy(); } catch {}
+      }
+      const el = document.getElementById('yt-player');
+      el.innerHTML = '';
+      state.player = new YT.Player('yt-player', {
+        videoId,
+        height: '200',
+        width: '100%',
+        playerVars: {
+          autoplay: 0,
+          controls: 1,
+          rel: 0,
+          modestbranding: 1,
+          origin: location.origin || 'https://listensharp.app',
+        },
+        events: {
+          onReady: () => { state.playerReady = true; resolve(); },
+          onStateChange: onPlayerStateChange,
+          onError: () => setError('Video cannot be embedded. It may be private or region-blocked.'),
+        }
+      });
+    };
+    tryCreate();
+  });
+}
+
+function onPlayerStateChange(event) {
+  // YT.PlayerState.ENDED = 0
+  if (event.data === 0) {
+    clearSegmentTimer();
+  }
+}
+
+function playSegment(start, end) {
+  if (!state.player || !state.playerReady) return;
+  clearSegmentTimer();
+  state.player.seekTo(start, true);
+  state.player.setPlaybackRate(state.speed);
+  state.player.playVideo();
+
+  const duration = (end - start) / state.speed * 1000 + 300;
+  state.segmentTimer = setTimeout(() => {
+    if (state.player) state.player.pauseVideo();
+  }, duration);
+}
+
+function clearSegmentTimer() {
+  if (state.segmentTimer) { clearTimeout(state.segmentTimer); state.segmentTimer = null; }
+}
+
+// ─────────────────────────────────────────────────────────────
+// TRANSCRIPT FETCHING
+// ─────────────────────────────────────────────────────────────
+function extractVideoId(url) {
+  const patterns = [
+    /[?&]v=([^&#]+)/,
+    /youtu\.be\/([^?&#]+)/,
+    /youtube\.com\/embed\/([^?&#]+)/,
+    /youtube\.com\/shorts\/([^?&#]+)/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+async function fetchWithTimeout(url, timeout = 10000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(id);
+    return res;
+  } catch(e) {
+    clearTimeout(id);
+    throw e;
+  }
+}
+
+async function fetchTranscript(videoId) {
+  // ── Strategy 1: youtubetranscript.com API (works from file://, no CORS issues) ──
+  try {
+    const res = await fetchWithTimeout(
+      `https://www.youtubetranscript.com/?v=${videoId}&json=1`, 9000
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map(item => ({
+          text: item.text?.replace(/\n/g, ' ').trim() || '',
+          start: parseFloat(item.start) || 0,
+          end: (parseFloat(item.start) || 0) + (parseFloat(item.duration) || 3),
+        })).filter(c => c.text);
+      }
+    }
+  } catch {}
+
+  // ── Strategy 2: Tactiq free API ──
+  try {
+    const res = await fetchWithTimeout(
+      `https://tactiq-apps-prod.tactiq.io/transcript?videoUrl=https://www.youtube.com/watch?v=${videoId}&lang=en`,
+      10000
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const segments = data?.captions || data?.transcript || [];
+      if (segments.length > 0) {
+        return segments.map(s => ({
+          text: (s.text || s.content || '').replace(/\n/g,' ').trim(),
+          start: parseFloat(s.start || s.offset || 0),
+          end: parseFloat(s.start || s.offset || 0) + parseFloat(s.dur || s.duration || 3),
+        })).filter(c => c.text);
+      }
+    }
+  } catch {}
+
+  // ── Strategy 3: Fetch YouTube page via allorigins (handles file:// CORS) ──
+  // allorigins proxies the request server-side, so file:// origin doesn't matter
+  try {
+    const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(ytUrl)}`;
+    const res = await fetchWithTimeout(proxyUrl, 12000);
+    if (res.ok) {
+      const wrapper = await res.json();
+      const html = wrapper.contents || '';
+
+      // Extract captionTracks from the YT page's inline JSON
+      const match = html.match(/"captionTracks":(\[[\s\S]*?\])/);
+      if (match) {
+        let tracks;
+        try { tracks = JSON.parse(match[1]); } catch { tracks = []; }
+        // Prefer English; fall back to first available
+        const eng = tracks.find(t =>
+          t.languageCode === 'en' ||
+          t.languageCode === 'en-US' ||
+          (t.vssId || '').includes('.en')
+        );
+        const track = eng || tracks[0];
+        if (track?.baseUrl) {
+          const xmlUrl = track.baseUrl
+            .replace(/\\u0026/g, '&')
+            .replace(/\\u003d/g, '=');
+
+          // Fetch caption XML also via allorigins
+          const xmlProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(xmlUrl)}`;
+          const xmlRes = await fetchWithTimeout(xmlProxy, 10000);
+          if (xmlRes.ok) {
+            const xmlWrapper = await xmlRes.json();
+            const xmlText = xmlWrapper.contents || '';
+            const cues = parseXMLCaptions(xmlText);
+            if (cues.length > 0) return cues;
+          }
+        }
+      }
+    }
+  } catch {}
+
+  // ── Strategy 4: corsproxy.io (alternative proxy) ──
+  try {
+    const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const res = await fetchWithTimeout(
+      `https://corsproxy.io/?${encodeURIComponent(ytUrl)}`, 12000
+    );
+    if (res.ok) {
+      const html = await res.text();
+      const match = html.match(/"captionTracks":(\[[\s\S]*?\])/);
+      if (match) {
+        let tracks;
+        try { tracks = JSON.parse(match[1]); } catch { tracks = []; }
+        const eng = tracks.find(t =>
+          t.languageCode === 'en' || t.languageCode === 'en-US' ||
+          (t.vssId || '').includes('.en')
+        );
+        const track = eng || tracks[0];
+        if (track?.baseUrl) {
+          const xmlUrl = track.baseUrl.replace(/\\u0026/g, '&').replace(/\\u003d/g, '=');
+          const xmlRes = await fetchWithTimeout(
+            `https://corsproxy.io/?${encodeURIComponent(xmlUrl)}`, 10000
+          );
+          if (xmlRes.ok) {
+            const xmlText = await xmlRes.text();
+            const cues = parseXMLCaptions(xmlText);
+            if (cues.length > 0) return cues;
+          }
+        }
+      }
+    }
+  } catch {}
+
+  throw new Error('NO_CAPTIONS');
+}
+
+function parseJson3Captions(data) {
+  const events = data.events || [];
+  const cues = [];
+  for (const ev of events) {
+    if (!ev.segs) continue;
+    const text = ev.segs.map(s => s.utf8 || '').join('').replace(/\n/g, ' ').trim();
+    if (!text || text === ' ') continue;
+    cues.push({ text, start: ev.tStartMs / 1000, end: (ev.tStartMs + (ev.dDurationMs || 3000)) / 1000 });
+  }
+  return cues;
+}
+
+function parseXMLCaptions(xml) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xml, 'text/xml');
+  const texts = doc.querySelectorAll('text');
+  const cues = [];
+  texts.forEach(t => {
+    const start = parseFloat(t.getAttribute('start'));
+    const dur = parseFloat(t.getAttribute('dur') || '2');
+    const raw = t.textContent
+      .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+      .replace(/&#39;/g,"'").replace(/&quot;/g,'"')
+      .replace(/<[^>]+>/g,'').trim();
+    if (raw) cues.push({ text: raw, start, end: start + dur });
+  });
+  return cues;
+}
+
+// ─────────────────────────────────────────────────────────────
+// SENTENCE SPLITTING & MERGING
+// ─────────────────────────────────────────────────────────────
+function cuestoSentences(cues) {
+  // Merge cues into a buffer, then split on sentence boundaries
+  let buffer = '';
+  let bufStart = 0;
+  let bufEnd = 0;
+  const sentences = [];
+
+  function flush() {
+    const text = buffer.trim();
+    if (text.length > 8) {
+      sentences.push({ text, start: bufStart, end: bufEnd });
+    }
+    buffer = '';
+  }
+
+  for (const cue of cues) {
+    if (!buffer) { bufStart = cue.start; }
+    buffer += (buffer ? ' ' : '') + cue.text;
+    bufEnd = cue.end;
+
+    // Check for sentence-ending punctuation
+    if (/[.?!]["']?\s*$/.test(cue.text.trim())) {
+      flush();
+      bufStart = cue.end;
+    }
+  }
+  if (buffer.trim()) flush();
+
+  // Post-process: split any merged sentences that are too long
+  const result = [];
+  for (const s of sentences) {
+    const parts = s.text.split(/(?<=[.?!]["']?)\s+/);
+    if (parts.length <= 1) { result.push(s); continue; }
+    // Distribute time proportionally
+    const totalChars = s.text.length;
+    const totalTime = s.end - s.start;
+    let cursor = s.start;
+    for (const part of parts) {
+      if (!part.trim()) continue;
+      const portion = part.length / totalChars;
+      const partEnd = cursor + totalTime * portion;
+      result.push({ text: part.trim(), start: cursor, end: Math.min(partEnd, s.end) });
+      cursor = partEnd;
+    }
+  }
+
+  return result.filter(s => s.text.length > 4);
+}
+
+// ─────────────────────────────────────────────────────────────
+// VOCAB HIGHLIGHTING
+// ─────────────────────────────────────────────────────────────
+function highlightVocab(text) {
+  const words = text.split(/(\s+|[^\w']+)/);
+  let hasAnnotation = false;
+  const html = words.map(token => {
+    const clean = token.toLowerCase().replace(/[^a-z]/g, '');
+    if (C1_WORDS.has(clean)) { hasAnnotation = true; return `<span class="word c1" title="C1 vocabulary">${token}</span>`; }
+    if (B2_WORDS.has(clean)) { hasAnnotation = true; return `<span class="word b2" title="B2 vocabulary">${token}</span>`; }
+    return token;
+  }).join('');
+  return { html, hasAnnotation };
+}
+
+// ─────────────────────────────────────────────────────────────
+// UI RENDERING
+// ─────────────────────────────────────────────────────────────
+function setLoading(msg) {
+  const ov = document.getElementById('load-overlay');
+  document.getElementById('overlay-msg').textContent = msg;
+  ov.classList.add('visible');
+}
+function hideLoading() {
+  document.getElementById('load-overlay').classList.remove('visible');
+}
+function setStatus(html) {
+  document.getElementById('status-area').innerHTML = html;
+}
+function clearStatus() {
+  document.getElementById('status-area').innerHTML = '';
+}
+function setError(msg) {
+  hideLoading();
+  setStatus(`<div class="error-msg"><span class="err-icon">⚠️</span><span>${msg}</span></div>`);
+}
+
+function showSplash() {
+  document.getElementById('splash-view').classList.remove('hidden');
+  document.getElementById('practice-main').classList.remove('visible');
+}
+function showPractice() {
+  document.getElementById('splash-view').classList.add('hidden');
+  document.getElementById('practice-main').classList.add('visible');
+}
+
+function buildOrder() {
+  const order = state.sentences.map((_, i) => i);
+  if (state.shuffle) {
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+  }
+  // If filtering, only show matching sentences
+  if (state.filterMode !== 'all') {
+    return order.filter(i => state.ratings[i] === state.filterMode);
+  }
+  return order;
+}
+
+function renderSentenceList() {
+  const list = document.getElementById('sentence-list');
+  if (!state.sentences.length) {
+    list.innerHTML = '<div class="sidebar-empty">Load a video to<br>see sentences here.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  state.sentences.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'sentence-item';
+    div.dataset.idx = i;
+
+    const rating = state.ratings[i];
+    const isActive = state.order[state.currentIdx] === i;
+    if (isActive) div.classList.add('active');
+
+    // Filter visibility
+    if (state.filterMode !== 'all' && rating !== state.filterMode) {
+      div.classList.add('hidden-item');
+    }
+
+    const ratingBadge = rating ? `<span class="item-rating ${rating}">${rating}</span>` : '';
+    div.innerHTML = `
+      <div class="item-num"><span>#${i+1}</span>${ratingBadge}</div>
+      <div class="item-text">${s.text}</div>
+    `;
+    div.addEventListener('click', () => jumpToSentence(i));
+    list.appendChild(div);
+  });
+}
+
+function jumpToSentence(sentenceIdx) {
+  // Find position in order
+  let pos = state.order.indexOf(sentenceIdx);
+  if (pos === -1) {
+    // Not in current order (filtered out) — just jump directly
+    state.order = buildOrder();
+    pos = state.order.indexOf(sentenceIdx);
+    if (pos === -1) { state.order.unshift(sentenceIdx); pos = 0; }
+  }
+  state.currentIdx = pos;
+  renderCurrentSentence();
+}
+
+function renderCurrentSentence() {
+  if (!state.sentences.length) return;
+  const senIdx = state.order[state.currentIdx];
+  const sentence = state.sentences[senIdx];
+  state.revealed = false;
+
+  // Sentence card
+  const card = document.getElementById('sentence-card');
+  card.classList.remove('revealed');
+  document.getElementById('sentence-text').innerHTML = '';
+
+  // Progress
+  const slider = document.getElementById('progress-slider');
+  slider.max = state.order.length - 1;
+  slider.value = state.currentIdx;
+
+  document.getElementById('progress-text').innerHTML =
+    `Sentence <strong>${state.currentIdx + 1}</strong> / <strong>${state.order.length}</strong>`;
+
+  // Rating display
+  const r = state.ratings[senIdx];
+  const rEl = document.getElementById('rating-display');
+  rEl.innerHTML = r ? `<span class="item-rating ${r}">${r}</span>` : '';
+
+  // Update rating buttons
+  document.querySelectorAll('.btn-rate').forEach(b => {
+    b.classList.toggle('active', b.dataset.rating === r);
+  });
+
+  // Sidebar highlight
+  document.querySelectorAll('.sentence-item').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.idx) === senIdx);
+  });
+  // Scroll sidebar to item
+  const activeItem = document.querySelector('.sentence-item.active');
+  if (activeItem) activeItem.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+
+  // Show/hide vocab legend
+  document.getElementById('vocab-legend').style.display = 'none';
+
+  // Play segment
+  playSegment(sentence.start, sentence.end);
+}
+
+function revealSentence() {
+  if (state.revealed) return;
+  state.revealed = true;
+  const senIdx = state.order[state.currentIdx];
+  const sentence = state.sentences[senIdx];
+  const card = document.getElementById('sentence-card');
+  const { html, hasAnnotation } = highlightVocab(sentence.text);
+  document.getElementById('sentence-text').innerHTML = html;
+  card.classList.add('revealed');
+  if (hasAnnotation) document.getElementById('vocab-legend').style.display = 'flex';
+}
+
+function nextSentence() {
+  if (state.currentIdx < state.order.length - 1) {
+    state.currentIdx++;
+    renderCurrentSentence();
+  } else {
+    // End of list
+    setStatus('<div class="loading-msg">🎉 You\'ve completed all sentences! Reload to start over.</div>');
+    setTimeout(clearStatus, 4000);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// MAIN LOAD FLOW
+// ─────────────────────────────────────────────────────────────
+async function loadVideo() {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) return;
+
+  const videoId = extractVideoId(url);
+  if (!videoId) {
+    setError('Could not find a YouTube video ID in that URL. Please paste a valid YouTube link.');
+    return;
+  }
+
+  clearStatus();
+  setLoading('Fetching transcript…');
+  document.getElementById('btn-load').disabled = true;
+
+  try {
+    const cues = await fetchTranscript(videoId);
+    if (!cues || cues.length === 0) throw new Error('NO_CAPTIONS');
+
+    setLoading('Processing sentences…');
+    const sentences = cuestoSentences(cues);
+    if (sentences.length === 0) throw new Error('NO_SENTENCES');
+
+    state.videoId = videoId;
+    state.sentences = sentences;
+    state.ratings = loadRatings(videoId);
+    state.currentIdx = 0;
+    state.shuffle = document.getElementById('shuffle-toggle').checked;
+    state.order = buildOrder();
+
+    setLoading('Loading player…');
+    await createPlayer(videoId);
+
+    showPractice();
+    renderSentenceList();
+    renderCurrentSentence();
+    hideLoading();
+    clearStatus();
+
+  } catch (err) {
+    if (err.message === 'NO_CAPTIONS' || err.message === 'NO_SENTENCES') {
+      setError('This video has no available English subtitles. Please try another video.');
+    } else if (err.name === 'AbortError' || err.message.includes('fetch') || err.message.includes('Failed')) {
+      setError(`Network error — all transcript sources failed.<br><br>
+        <strong>💡 Bạn đang mở file trực tiếp (file://).</strong> Hãy thử:<br>
+        &nbsp;• <strong>VS Code</strong> + extension <em>Live Server</em> → click "Go Live"<br>
+        &nbsp;• Hoặc chạy lệnh: <code>python -m http.server 8080</code> rồi vào <code>http://localhost:8080</code>
+      `);
+    } else {
+      setError(`Could not load transcript. The video may be private or region-blocked.<br><small style="opacity:.6">${err.message}</small>`);
+    }
+  } finally {
+    document.getElementById('btn-load').disabled = false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// EVENT LISTENERS
+// ─────────────────────────────────────────────────────────────
+document.getElementById('btn-load').addEventListener('click', loadVideo);
+document.getElementById('url-input').addEventListener('keydown', e => { if (e.key === 'Enter') loadVideo(); });
+
+document.getElementById('btn-replay').addEventListener('click', () => {
+  if (!state.sentences.length) return;
+  const senIdx = state.order[state.currentIdx];
+  const s = state.sentences[senIdx];
+  playSegment(s.start, s.end);
+});
+
+document.getElementById('btn-show').addEventListener('click', revealSentence);
+document.getElementById('btn-next').addEventListener('click', nextSentence);
+
+document.getElementById('progress-slider').addEventListener('input', function() {
+  state.currentIdx = parseInt(this.value);
+  renderCurrentSentence();
+});
+
+document.querySelectorAll('.speed-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.speed = parseFloat(btn.dataset.speed);
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (state.player && state.playerReady) state.player.setPlaybackRate(state.speed);
+  });
+});
+
+document.querySelectorAll('.btn-rate').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!state.sentences.length) return;
+    const senIdx = state.order[state.currentIdx];
+    const rating = btn.dataset.rating;
+    state.ratings[senIdx] = rating;
+    saveRatings();
+    // Update UI
+    document.querySelectorAll('.btn-rate').forEach(b => b.classList.toggle('active', b.dataset.rating === rating));
+    document.getElementById('rating-display').innerHTML = `<span class="item-rating ${rating}">${rating}</span>`;
+    renderSentenceList();
+  });
+});
+
+document.getElementById('shuffle-toggle').addEventListener('change', function() {
+  state.shuffle = this.checked;
+  if (state.sentences.length) {
+    state.order = buildOrder();
+    state.currentIdx = 0;
+    renderSentenceList();
+    renderCurrentSentence();
+  }
+});
+
+document.querySelectorAll('.pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    state.filterMode = pill.dataset.filter;
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    if (state.sentences.length) {
+      state.order = buildOrder();
+      state.currentIdx = 0;
+      renderSentenceList();
+      if (state.order.length) renderCurrentSentence();
+      else setStatus('<div class="loading-msg">No sentences rated as "<strong>' + state.filterMode + '</strong>" yet.</div>');
+    }
+  });
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'r' || e.key === 'R') document.getElementById('btn-replay').click();
+  if (e.key === 's' || e.key === 'S') document.getElementById('btn-show').click();
+  if (e.key === 'ArrowRight' || e.key === 'n' || e.key === 'N') document.getElementById('btn-next').click();
+  if (e.key === '1') document.querySelector('[data-rating="hard"]').click();
+  if (e.key === '2') document.querySelector('[data-rating="ok"]').click();
+  if (e.key === '3') document.querySelector('[data-rating="easy"]').click();
+});
+</script>
+</body>
+</html>
