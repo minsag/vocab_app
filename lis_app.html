@@ -609,6 +609,21 @@
   #splash-view { display: flex; flex-direction: column; gap: 16px; }
   #splash-view.hidden { display: none; }
 
+  .btn-worker-settings {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    border-radius: 7px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn-worker-settings:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-worker-settings.configured { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
   @media (max-width: 900px) {
     main { grid-template-columns: 1fr; }
     .sidebar { display: none; }
@@ -632,6 +647,22 @@
         <span class="toggle-track"></span>
         Shuffle
       </label>
+      <button class="btn-worker-settings" id="btn-worker-settings" title="Cau hinh Cloudflare Worker">&#9881; Worker</button>
+    </div>
+
+    <!-- Worker settings panel -->
+    <div id="worker-panel" style="display:none; position:absolute; top:61px; right:0; width:420px; background:var(--bg2); border:1px solid var(--border2); border-radius:0 0 var(--radius) var(--radius); padding:18px 20px; z-index:200; box-shadow:0 8px 32px rgba(0,0,0,.5);">
+      <div style="font-family:var(--font-display);font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)">&#9881; Cloudflare Worker URL</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6">
+        Cac proxy cong cong thuong bi block. Deploy worker cua rieng ban de lay transcript on dinh:<br>
+        <a href="https://workers.cloudflare.com" target="_blank" style="color:var(--accent)">workers.cloudflare.com</a> &rarr; tao worker &rarr; paste noi dung file <code>worker.js</code>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="worker-url-input" placeholder="https://xxx.your-name.workers.dev"
+          style="flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 12px;color:var(--text);font-family:var(--font-mono);font-size:11.5px;outline:none" />
+        <button id="btn-save-worker" style="background:var(--accent);color:#0d0f12;border:none;border-radius:7px;padding:8px 14px;font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer">Save</button>
+      </div>
+      <div id="worker-status" style="font-size:11px;margin-top:8px;color:var(--text3)"></div>
     </div>
   </header>
 
@@ -896,109 +927,68 @@ async function fetchWithTimeout(url, timeout = 10000) {
   }
 }
 
+// ── Worker URL: set once, saved in localStorage ──
+let WORKER_URL = localStorage.getItem('ls_worker_url') || '';
+
 async function fetchTranscript(videoId) {
-  // ── Strategy 1: youtubetranscript.com API (works from file://, no CORS issues) ──
-  try {
-    const res = await fetchWithTimeout(
-      `https://www.youtubetranscript.com/?v=${videoId}&json=1`, 9000
-    );
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        return data.map(item => ({
-          text: item.text?.replace(/\n/g, ' ').trim() || '',
-          start: parseFloat(item.start) || 0,
-          end: (parseFloat(item.start) || 0) + (parseFloat(item.duration) || 3),
-        })).filter(c => c.text);
+  // ── Strategy 1: Cloudflare Worker (nếu đã cấu hình) ──
+  if (WORKER_URL) {
+    try {
+      const res = await fetchWithTimeout(`${WORKER_URL}?v=${videoId}`, 12000);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.cues && data.cues.length > 0) return data.cues;
+        if (data.error === 'NO_CAPTIONS') throw new Error('NO_CAPTIONS');
       }
-    }
-  } catch {}
+    } catch(e) { if (e.message === 'NO_CAPTIONS') throw e; }
+  }
 
-  // ── Strategy 2: Tactiq free API ──
-  try {
-    const res = await fetchWithTimeout(
-      `https://tactiq-apps-prod.tactiq.io/transcript?videoUrl=https://www.youtube.com/watch?v=${videoId}&lang=en`,
-      10000
-    );
-    if (res.ok) {
+  // ── Strategy 2: Public transcript APIs ──
+  const PUBLIC_APIS = [
+    `https://yt-transcript-api.vercel.app/api/transcript?videoId=${videoId}&lang=en`,
+    `https://api.kome.ai/api/tools/youtube-transcripts?video_id=${videoId}`,
+  ];
+  for (const apiUrl of PUBLIC_APIS) {
+    try {
+      const res = await fetchWithTimeout(apiUrl, 9000);
+      if (!res.ok) continue;
       const data = await res.json();
-      const segments = data?.captions || data?.transcript || [];
-      if (segments.length > 0) {
-        return segments.map(s => ({
-          text: (s.text || s.content || '').replace(/\n/g,' ').trim(),
-          start: parseFloat(s.start || s.offset || 0),
-          end: parseFloat(s.start || s.offset || 0) + parseFloat(s.dur || s.duration || 3),
-        })).filter(c => c.text);
+      const items = data.transcript || data.captions || data.subtitles || data.data || data;
+      if (Array.isArray(items) && items.length > 0) {
+        return items.map(item => ({
+          text: (item.text || item.content || item.line || '').replace(/\n/g,' ').trim(),
+          start: parseFloat(item.start || item.offset || item.startTime || 0),
+          end:   parseFloat(item.start || item.offset || item.startTime || 0)
+               + parseFloat(item.dur  || item.duration || (item.durationMs||0)/1000 || 3),
+        })).filter(c => c.text.length > 0);
       }
-    }
-  } catch {}
+    } catch {}
+  }
 
-  // ── Strategy 3: Fetch YouTube page via allorigins (handles file:// CORS) ──
-  // allorigins proxies the request server-side, so file:// origin doesn't matter
+  // ── Strategy 3: allorigins JSON-wrap proxy ──
   try {
     const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(ytUrl)}`;
-    const res = await fetchWithTimeout(proxyUrl, 12000);
+    const res = await fetchWithTimeout(
+      `https://api.allorigins.win/get?url=${encodeURIComponent(ytUrl)}`, 14000
+    );
     if (res.ok) {
       const wrapper = await res.json();
       const html = wrapper.contents || '';
-
-      // Extract captionTracks from the YT page's inline JSON
       const match = html.match(/"captionTracks":(\[[\s\S]*?\])/);
       if (match) {
-        let tracks;
-        try { tracks = JSON.parse(match[1]); } catch { tracks = []; }
-        // Prefer English; fall back to first available
+        let tracks = [];
+        try { tracks = JSON.parse(match[1]); } catch {}
         const eng = tracks.find(t =>
-          t.languageCode === 'en' ||
-          t.languageCode === 'en-US' ||
-          (t.vssId || '').includes('.en')
-        );
-        const track = eng || tracks[0];
-        if (track?.baseUrl) {
-          const xmlUrl = track.baseUrl
-            .replace(/\\u0026/g, '&')
-            .replace(/\\u003d/g, '=');
-
-          // Fetch caption XML also via allorigins
-          const xmlProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(xmlUrl)}`;
-          const xmlRes = await fetchWithTimeout(xmlProxy, 10000);
-          if (xmlRes.ok) {
-            const xmlWrapper = await xmlRes.json();
-            const xmlText = xmlWrapper.contents || '';
-            const cues = parseXMLCaptions(xmlText);
-            if (cues.length > 0) return cues;
-          }
-        }
-      }
-    }
-  } catch {}
-
-  // ── Strategy 4: corsproxy.io (alternative proxy) ──
-  try {
-    const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    const res = await fetchWithTimeout(
-      `https://corsproxy.io/?${encodeURIComponent(ytUrl)}`, 12000
-    );
-    if (res.ok) {
-      const html = await res.text();
-      const match = html.match(/"captionTracks":(\[[\s\S]*?\])/);
-      if (match) {
-        let tracks;
-        try { tracks = JSON.parse(match[1]); } catch { tracks = []; }
-        const eng = tracks.find(t =>
-          t.languageCode === 'en' || t.languageCode === 'en-US' ||
-          (t.vssId || '').includes('.en')
-        );
-        const track = eng || tracks[0];
-        if (track?.baseUrl) {
-          const xmlUrl = track.baseUrl.replace(/\\u0026/g, '&').replace(/\\u003d/g, '=');
+          t.languageCode === 'en' || t.languageCode === 'en-US' || (t.vssId||'').includes('.en')
+        ) || tracks[0];
+        if (eng?.baseUrl) {
+          const xmlUrl = eng.baseUrl.replace(/\\u0026/g,'&').replace(/\\u003d/g,'=');
           const xmlRes = await fetchWithTimeout(
-            `https://corsproxy.io/?${encodeURIComponent(xmlUrl)}`, 10000
+            `https://api.allorigins.win/get?url=${encodeURIComponent(xmlUrl)}`, 10000
           );
           if (xmlRes.ok) {
-            const xmlText = await xmlRes.text();
-            const cues = parseXMLCaptions(xmlText);
+            const xmlWrapper = await xmlRes.json();
+            const cues = parseXMLCaptions(xmlWrapper.contents || '');
             if (cues.length > 0) return cues;
           }
         }
@@ -1306,14 +1296,14 @@ async function loadVideo() {
   } catch (err) {
     if (err.message === 'NO_CAPTIONS' || err.message === 'NO_SENTENCES') {
       setError('This video has no available English subtitles. Please try another video.');
-    } else if (err.name === 'AbortError' || err.message.includes('fetch') || err.message.includes('Failed')) {
-      setError(`Network error — all transcript sources failed.<br><br>
-        <strong>💡 Bạn đang mở file trực tiếp (file://).</strong> Hãy thử:<br>
-        &nbsp;• <strong>VS Code</strong> + extension <em>Live Server</em> → click "Go Live"<br>
-        &nbsp;• Hoặc chạy lệnh: <code>python -m http.server 8080</code> rồi vào <code>http://localhost:8080</code>
-      `);
     } else {
-      setError(`Could not load transcript. The video may be private or region-blocked.<br><small style="opacity:.6">${err.message}</small>`);
+      setError(`
+        Không fetch được transcript. Tất cả các proxy công cộng đều bị block.<br><br>
+        <strong>✅ Giải pháp vĩnh viễn:</strong> Deploy Cloudflare Worker miễn phí (5 phút):<br>
+        &nbsp;1. Tải file <code>worker.js</code> → vào <a href="https://workers.cloudflare.com" target="_blank" style="color:var(--accent)">workers.cloudflare.com</a> → tạo worker → paste code<br>
+        &nbsp;2. Copy URL worker → dán vào ô <strong>"Worker URL"</strong> ở góc trên phải của app<br><br>
+        <small style="opacity:.5">${err.message}</small>
+      `);
     }
   } finally {
     document.getElementById('btn-load').disabled = false;
@@ -1387,6 +1377,61 @@ document.querySelectorAll('.pill').forEach(pill => {
       else setStatus('<div class="loading-msg">No sentences rated as "<strong>' + state.filterMode + '</strong>" yet.</div>');
     }
   });
+});
+
+// ── Worker settings panel ──
+const workerBtn = document.getElementById('btn-worker-settings');
+const workerPanel = document.getElementById('worker-panel');
+const workerInput = document.getElementById('worker-url-input');
+const workerStatus = document.getElementById('worker-status');
+
+// Init from saved value
+if (WORKER_URL) {
+  workerInput.value = WORKER_URL;
+  workerBtn.classList.add('configured');
+  workerBtn.textContent = '✓ Worker';
+}
+
+workerBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  workerPanel.style.display = workerPanel.style.display === 'none' ? 'block' : 'none';
+});
+document.addEventListener('click', (e) => {
+  if (!workerPanel.contains(e.target) && e.target !== workerBtn) {
+    workerPanel.style.display = 'none';
+  }
+});
+
+document.getElementById('btn-save-worker').addEventListener('click', async () => {
+  const url = workerInput.value.trim().replace(/\/$/, '');
+  if (!url) {
+    WORKER_URL = '';
+    localStorage.removeItem('ls_worker_url');
+    workerBtn.classList.remove('configured');
+    workerBtn.textContent = '⚙ Worker';
+    workerStatus.textContent = 'Worker URL cleared.';
+    return;
+  }
+  workerStatus.textContent = 'Testing…';
+  try {
+    const res = await fetchWithTimeout(`${url}?v=dQw4w9WgXcQ`, 8000);
+    const data = await res.json();
+    if (data.cues || data.error === 'NO_CAPTIONS') {
+      WORKER_URL = url;
+      localStorage.setItem('ls_worker_url', url);
+      workerBtn.classList.add('configured');
+      workerBtn.textContent = '✓ Worker';
+      workerStatus.style.color = 'var(--easy)';
+      workerStatus.textContent = '✓ Worker hoạt động tốt! URL đã được lưu.';
+      setTimeout(() => { workerPanel.style.display = 'none'; }, 1500);
+    } else {
+      workerStatus.style.color = 'var(--hard)';
+      workerStatus.textContent = `Worker phản hồi lạ: ${JSON.stringify(data).slice(0,80)}`;
+    }
+  } catch(e) {
+    workerStatus.style.color = 'var(--hard)';
+    workerStatus.textContent = `Lỗi kết nối: ${e.message}`;
+  }
 });
 
 // Keyboard shortcuts
